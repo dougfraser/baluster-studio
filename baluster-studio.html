@@ -338,14 +338,14 @@ function buildCloseup(){
   const ppi=26;
   const rise=7.5*ppi, run=10.5*ppi, noseD=1.15*ppi, capH=1.35*ppi;
   const balH=34*ppi;
-  const nT=4;
+  const nT=4;          // treads carrying balusters
+  const nDraw=5;       // one extra tread cropped at the right edge, so the stairs run off-frame
   const x0=118;
-  // canvas sized from the geometry: highest baluster top + margin, floor strip below tread 0
   const topMargin=36, floorStrip=180;
   const cap0=Math.round(balH + (nT-1)*rise + 8.2*ppi*(rise/run) + topMargin);
-  const W=Math.round(x0*2 + nT*run + noseD + 60), H=Math.round(cap0 + rise + floorStrip);
+  const W=Math.round(x0 + (nT)*run + run*0.62), H=Math.round(cap0 + rise + floorStrip);
   const treads=[];
-  for(let k=0;k<nT;k++) treads.push({x:x0+k*run, top:cap0-k*rise});
+  for(let k=0;k<nDraw;k++) treads.push({x:x0+k*run, top:cap0-k*rise});
   const rnd=mulberry(777);
   const yAt = xx => cap0 - balH - (xx-treads[0].x)*(rise/run);
 
@@ -381,20 +381,18 @@ function buildCloseup(){
 
     // ----- skirt: white board following the steps, clean diagonal bottom edge -----
     const sD=11.5*ppi; // skirt depth below nosings
-    const skTopPts=[];
-    for(const t of treads){ skTopPts.push([t.x-noseD, t.top]); skTopPts.push([t.x+run, t.top]); }
     x.beginPath();
     x.moveTo(treads[0].x-noseD, treads[0].top+rise+capH);      // start below first nosing (floor level-ish)
     x.lineTo(treads[0].x-noseD, treads[0].top);
-    for(let k=0;k<nT;k++){
+    for(let k=0;k<nDraw;k++){
       const t=treads[k];
       x.lineTo(t.x+run, t.top);                                 // along tread (behind cap)
-      if(k<nT-1) x.lineTo(t.x+run, t.top-rise);                 // up the riser
-      else { x.lineTo(t.x+run+noseD+120, t.top); }              // run off right edge
+      x.lineTo(t.x+run, t.top-rise);                            // up the riser (last one runs off-frame)
     }
-    const bx1=treads[nT-1].x+run+noseD+120;
-    x.lineTo(bx1, treads[nT-1].top + sD);
-    x.lineTo(treads[0].x-noseD + sD*(run/rise)*0 + 0, treads[0].top+rise+capH + 0); // back to start via diagonal
+    const bx1=W+60;
+    x.lineTo(bx1, treads[nDraw-1].top-rise);
+    x.lineTo(bx1, treads[nDraw-1].top + sD);
+    x.lineTo(treads[0].x-noseD, treads[0].top+rise+capH);       // diagonal bottom edge back to start
     x.closePath();
     let sg=x.createLinearGradient(0,cap0-360,0,cap0+sD);
     sg.addColorStop(0,'#f4f0e8'); sg.addColorStop(0.7,'#e9e4d8'); sg.addColorStop(1,'#d8d1c1');
@@ -403,14 +401,13 @@ function buildCloseup(){
     x.strokeStyle='rgba(125,110,88,.4)'; x.lineWidth=2.5;
     x.beginPath();
     x.moveTo(treads[0].x-noseD, treads[0].top+rise+capH);
-    x.lineTo(bx1, treads[nT-1].top+sD);
+    x.lineTo(bx1, treads[nDraw-1].top+sD);
     x.stroke();
-    const eg=x.createLinearGradient(0,0,0,60);
     x.save();
     x.beginPath();
     x.moveTo(treads[0].x-noseD, treads[0].top+rise+capH);
-    x.lineTo(bx1, treads[nT-1].top+sD);
-    x.lineTo(bx1, treads[nT-1].top+sD+55);
+    x.lineTo(bx1, treads[nDraw-1].top+sD);
+    x.lineTo(bx1, treads[nDraw-1].top+sD+55);
     x.lineTo(treads[0].x-noseD, treads[0].top+rise+capH+55);
     x.closePath();
     const dg=x.createLinearGradient(0,cap0+sD*0.4,0,cap0+sD*0.4+70);
@@ -418,8 +415,39 @@ function buildCloseup(){
     x.fillStyle=dg; x.fill();
     x.restore();
 
+    // ----- framed art in the wall pocket above the upper steps -----
+    (()=>{
+      const fw=6.8*ppi, fh=10*ppi;
+      const fx=W-fw-22, fy=170;
+      // drop shadow
+      x.fillStyle='rgba(60,45,30,.16)';
+      x.fillRect(fx+7, fy+9, fw, fh);
+      // frame
+      x.fillStyle='#4a3a2a';
+      x.fillRect(fx, fy, fw, fh);
+      let ag=x.createLinearGradient(fx,fy,fx+fw,fy+fh);
+      ag.addColorStop(0,'#6a5a40'); ag.addColorStop(1,'#3c2e1e');
+      x.strokeStyle=ag; x.lineWidth=6; x.strokeRect(fx+3,fy+3,fw-6,fh-6);
+      // muted art: soft landscape blobs (greens/greys, like the Angkor piece)
+      const ax=fx+14, ay=fy+14, aw=fw-28, ah=fh-28;
+      let bg=x.createLinearGradient(0,ay,0,ay+ah);
+      bg.addColorStop(0,'#9aa392'); bg.addColorStop(0.55,'#75816c'); bg.addColorStop(1,'#4c5844');
+      x.fillStyle=bg; x.fillRect(ax,ay,aw,ah);
+      x.save(); x.beginPath(); x.rect(ax,ay,aw,ah); x.clip();
+      for(let i=0;i<26;i++){
+        const bx0=ax+rnd()*aw, by0=ay+ah*0.25+rnd()*ah*0.75, br=10+rnd()*46;
+        const bl=x.createRadialGradient(bx0,by0,0,bx0,by0,br);
+        bl.addColorStop(0,`rgba(${40+rnd()*60|0},${60+rnd()*50|0},${35+rnd()*40|0},${0.14+rnd()*0.2})`);
+        bl.addColorStop(1,'rgba(0,0,0,0)');
+        x.fillStyle=bl; x.beginPath(); x.arc(bx0,by0,br,0,7); x.fill();
+      }
+      x.fillStyle='rgba(235,230,210,.18)';
+      x.fillRect(ax,ay,aw,ah*0.22);
+      x.restore();
+    })();
+
     // ----- per-step: riser shading, nosing shadow, oak cap, carpet -----
-    for(let k=0;k<nT;k++){
+    for(let k=0;k<nDraw;k++){
       const t=treads[k];
       // riser face shading (inside skirt, below this cap back to next lower tread)
       const rg2=x.createLinearGradient(t.x-noseD,0,t.x+run*0.4,0);
@@ -604,9 +632,132 @@ function drawWoodV(x, cx, yT, yB, ppi){
   x.fillStyle='rgba(90,85,70,.3)'; x.fillRect(cx-bootW/2, yB-bootH, bootW, 2);
 }
 
+/* ================= drawn level run (like the landing) ================= */
+function buildLevel(){
+  const ppi=26;
+  const balExp=33;                       // exposed baluster inches on a level run
+  const balH=balExp*ppi;
+  const railTh=2.9*ppi, baseH=5*ppi, postW=3.5*ppi;
+  const n=11, gap=4.6*ppi;
+  const mL=150;
+  const topM=54, floorStrip=230;
+  const W=Math.round(mL*2 + postW*2 + (n+1)*gap), H=Math.round(topM+railTh+balH+baseH+floorStrip);
+  const railU=topM+railTh;               // rail underside
+  const baseTop=railU+balH;              // top of the white shoe board
+  const rnd=mulberry(4242);
+  const paint=(x)=>{
+    // wall
+    let g=x.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#ddd3c3'); g.addColorStop(0.6,'#d2c7b5'); g.addColorStop(1,'#c6baa7');
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+    for(let i=0;i<80;i++){
+      const mx=rnd()*W, my=rnd()*H, r=140+rnd()*240;
+      const mg=x.createRadialGradient(mx,my,0,mx,my,r);
+      mg.addColorStop(0,`rgba(${rnd()>0.5?252:120},${rnd()>0.5?246:108},${rnd()>0.5?232:92},${0.008+rnd()*0.012})`);
+      mg.addColorStop(1,'rgba(0,0,0,0)');
+      x.fillStyle=mg; x.beginPath(); x.arc(mx,my,r,0,7); x.fill();
+    }
+    g=x.createLinearGradient(0,0,W,H*0.8);
+    g.addColorStop(0,'rgba(255,251,238,.12)'); g.addColorStop(0.45,'rgba(255,251,238,0)');
+    g.addColorStop(1,'rgba(58,44,30,.09)');
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+    // soft shadow band on the wall under the rail
+    const shg=x.createLinearGradient(0,railU+8,0,railU+railTh*2.2);
+    shg.addColorStop(0,'rgba(70,55,38,.10)'); shg.addColorStop(1,'rgba(70,55,38,0)');
+    x.fillStyle=shg; x.fillRect(0,railU+8,W,railTh*2.2);
+
+    // carpet floor
+    let fg=x.createLinearGradient(0,baseTop+baseH,0,H);
+    fg.addColorStop(0,'#b6a48d'); fg.addColorStop(1,'#9d8b73');
+    x.fillStyle=fg; x.fillRect(0,baseTop+baseH-4,W,H);
+    x.save(); x.beginPath(); x.rect(0,baseTop+baseH-4,W,H); x.clip();
+    for(let i=0;i<5200;i++){
+      x.fillStyle=`rgba(${rnd()>0.5?238:128},${rnd()>0.5?226:110},${rnd()>0.5?204:86},${0.04+rnd()*0.07})`;
+      x.fillRect(rnd()*W, baseTop+baseH-4+rnd()*(H-baseTop-baseH+4), 1.8, 1.8);
+    }
+    x.restore();
+    // shadow of base board onto carpet
+    const bsg=x.createLinearGradient(0,baseTop+baseH,0,baseTop+baseH+34);
+    bsg.addColorStop(0,'rgba(60,45,30,.22)'); bsg.addColorStop(1,'rgba(60,45,30,0)');
+    x.fillStyle=bsg; x.fillRect(0,baseTop+baseH,W,34);
+
+    // white shoe board
+    let sg=x.createLinearGradient(0,baseTop,0,baseTop+baseH);
+    sg.addColorStop(0,'#f4f0e8'); sg.addColorStop(0.75,'#e6e0d2'); sg.addColorStop(1,'#cfc7b6');
+    x.fillStyle=sg; x.fillRect(mL*0.4, baseTop, W-mL*0.8, baseH);
+    x.fillStyle='rgba(255,252,242,.6)'; x.fillRect(mL*0.4, baseTop, W-mL*0.8, 4);
+    x.fillStyle='rgba(120,105,85,.3)'; x.fillRect(mL*0.4, baseTop+baseH-3, W-mL*0.8, 3);
+
+    // oak rail (horizontal)
+    const railGrad=(y0,y1,c)=>{ const gg=x.createLinearGradient(0,y0,0,y1); for(const [s,col] of c) gg.addColorStop(s,col); return gg; };
+    x.fillStyle=railGrad(topM,railU,[[0,'#d8ab6c'],[0.18,'#b88a50'],[0.45,'#8f6236'],[1,'#684623']]);
+    x.fillRect(-10,topM,W+20,railTh);
+    x.strokeStyle='rgba(64,38,16,.34)'; x.lineWidth=1.4;
+    for(let i=0;i<5;i++){
+      const gy=topM+railTh*(0.18+i*0.17)+(rnd()-0.5)*2;
+      x.beginPath();
+      for(let gx=-10;gx<W+10;gx+=64) gx<=-10?x.moveTo(gx,gy):x.lineTo(gx,gy+(rnd()-0.5)*2.2);
+      x.stroke();
+    }
+    x.strokeStyle='rgba(40,24,10,.5)'; x.lineWidth=2;
+    x.beginPath(); x.moveTo(-10,railU+1); x.lineTo(W+10,railU+1); x.stroke();
+    x.fillStyle='rgba(255,240,214,.35)'; x.fillRect(-10,topM+2,W+20,4);
+
+    // oak newel posts at both ends (in front of rail & base)
+    for(const px of [mL, W-mL-postW]){
+      // cast shadow
+      x.fillStyle='rgba(60,45,30,.14)';
+      x.fillRect(px+postW, topM-26, postW*0.4, baseTop+baseH-topM+30);
+      let pg=x.createLinearGradient(px,0,px+postW,0);
+      pg.addColorStop(0,'#7e5730'); pg.addColorStop(0.3,'#b0824c'); pg.addColorStop(0.62,'#96693a'); pg.addColorStop(1,'#5d3f22');
+      x.fillStyle=pg;
+      x.fillRect(px, topM-22, postW, baseTop+baseH-topM+22);
+      // cap
+      let cg=x.createLinearGradient(0,topM-52,0,topM-18);
+      cg.addColorStop(0,'#c99a60'); cg.addColorStop(1,'#7e5730');
+      x.fillStyle=cg;
+      x.beginPath();
+      x.moveTo(px-10, topM-20);
+      x.quadraticCurveTo(px-10, topM-48, px+postW/2, topM-50);
+      x.quadraticCurveTo(px+postW+10, topM-48, px+postW+10, topM-20);
+      x.closePath(); x.fill();
+      x.fillStyle='rgba(255,240,214,.3)'; x.fillRect(px-10, topM-22, postW+20, 4);
+      // base block
+      x.fillStyle=pg; x.fillRect(px-8, baseTop+baseH-26, postW+16, 26);
+      x.fillStyle='rgba(40,24,10,.3)'; x.fillRect(px-8, baseTop+baseH-26, postW+16, 3);
+      // grain
+      x.strokeStyle='rgba(70,42,18,.3)'; x.lineWidth=1.2;
+      for(let i=0;i<3;i++){
+        const gx=px+postW*(0.25+i*0.25)+(rnd()-0.5)*3;
+        x.beginPath();
+        for(let gy=topM-18;gy<baseTop+baseH;gy+=60) gy<=topM-18?x.moveTo(gx+(rnd()-0.5)*2,gy):x.lineTo(gx+(rnd()-0.5)*2.5,gy);
+        x.stroke();
+      }
+    }
+    // vignette
+    g=x.createRadialGradient(W/2,H*0.42,H*0.5,W/2,H*0.5,H*1.15);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(48,36,22,.13)');
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+  };
+  const plate=mk(W,H);
+  paint(plate.getContext('2d'));
+  const balusters=[];
+  const startX=mL+postW+gap;
+  for(let i=0;i<n;i++){
+    const bx=startX+i*gap;
+    balusters.push({xT:bx, yT:railU+1, xB:bx, yB:baseTop+2, len:balExp});
+  }
+  const before=mk(W,H);
+  const bx2=before.getContext('2d');
+  bx2.drawImage(plate,0,0);
+  for(const b of balusters) drawWoodV(bx2, b.xB, b.yT, b.yB, ppi);
+  return {plate, before, balusters, occluders:[], light:{dir:1, alpha:0.12}};
+}
+
 /* ================= scenes ================= */
 const SCENE_DEFS = [
-  {id:'closeup', name:'Close-up (drawn)'},
+  {id:'closeup', name:'Stairs (drawn)'},
+  {id:'level',   name:'Level rail (drawn)'},
   {id:'landing', name:'Landing (photo)'}
 ];
 function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
@@ -618,11 +769,12 @@ async function sceneAsset(id, kind){
 }
 async function setScene(id){
   setHint('');
-  if(id==='closeup'){
-    if(!S.closeupCache) S.closeupCache=buildCloseup();
-    const c=S.closeupCache;
+  if(id==='closeup'||id==='level'){
+    const key=id+'Cache';
+    if(!S[key]) S[key] = id==='closeup' ? buildCloseup() : buildLevel();
+    const c=S[key];
     S.plate=c.plate; S.before=c.before; S.balusters=c.balusters;
-    S.occluders=[]; S.light=c.light; S.sceneId='closeup';
+    S.occluders=[]; S.light=c.light; S.sceneId=id;
   } else {
     try{
       const [plateSrc, beforeSrc, geo] = await Promise.all([sceneAsset(id,'plate'), sceneAsset(id,'before'), sceneAsset(id,'geo')]);
@@ -638,6 +790,7 @@ async function setScene(id){
   S.split=null; $('beforeBtn').classList.remove('on');
   markScenes(); fitView(); updateCost(); invalidate(true); saveSoon();
   setHint(id==='closeup' ? 'A drawn close-up of your staircase — designs read clearly here. Zoom in!'
+        : id==='level'   ? 'A drawn level run, like your landing. Great for seeing the pattern rhythm.'
                          : 'Your upstairs landing, real photo. Swipe Before/after to compare with today.');
 }
 function markScenes(){
@@ -969,6 +1122,6 @@ buildGallery();
 buildPresets();
 const savedScene=restore();
 syncAll();
-setScene(savedScene==='landing'?'landing':'closeup');
+setScene(['landing','level'].includes(savedScene)?savedScene:'closeup');
 render();
 </script>
