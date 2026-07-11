@@ -1,0 +1,8 @@
+# original phone photos stay local (privacy; app only needs scenes/)
+photos/
+
+# debug crops from the prep pipeline
+scenes/preview/
+
+# build output (regenerate with: node dev/build.js)
+dist/

@@ -1,0 +1,735 @@
+<!doctype html>
+<title>scene prep</title>
+<style>
+  body{margin:0;background:#1c1c20;color:#ddd;font:13px monospace}
+  #status{padding:6px 10px;white-space:pre-wrap}
+  #disp{display:block;max-width:100vw}
+</style>
+<div id="status">ready</div>
+<canvas id="disp"></canvas>
+<script>
+'use strict';
+/*
+ Scene prep pipeline. Driven via preview_eval:
+   await load('/photos/current/money_shot.jpg', 2200)
+   S.runs = [{ top:[{x,y},{x,y}], base:[{x,y},{x,y}], n:14, stripWin:26, searchPx:14,
+               bright:165, chroma:46, padTop:3, padBot:6, maxOverBase:10, forceCore:0.4 }]
+   detect(0)   -> snaps strips, finds ends; draws overlay
+   erase(0)    -> erases balusters of run 0 (uses detection)
+   eraseRect(x,y,w,h [,feather]) -> manual patch (row lerp)
+   show(x,y,w,h,scale) -> crop preview on display canvas
+   showAll(maxW)        -> full view downscaled
+   undo()               -> undo last erase op
+   geometry()  -> app-format runs JSON (refined t, dy per baluster)
+   await save('flight')-> POST plate jpeg + geometry json to /save
+*/
+const S = { img:null, W:0, H:0, runs:[], det:[], undoStack:[] };
+const work = document.createElement('canvas'); const wx = work.getContext('2d',{willReadFrequently:true});
+const disp = document.getElementById('disp'); const dx2 = disp.getContext('2d');
+const status = t => document.getElementById('status').textContent = t;
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lineY=(p,x)=>Math.abs(p[1].x-p[0].x)<1e-6?p[0].y:lerp(p[0].y,p[1].y,(x-p[0].x)/(p[1].x-p[0].x));
+
+function load(url, maxSide=2200){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const sc=Math.min(1,maxSide/Math.max(img.width,img.height));
+      S.W=work.width=Math.round(img.width*sc); S.H=work.height=Math.round(img.height*sc);
+      wx.drawImage(img,0,0,S.W,S.H);
+      S.det=[]; S.undoStack=[];
+      showAll();
+      status(`loaded ${url} -> ${S.W}x${S.H}`);
+      res({w:S.W,h:S.H});
+    };
+    img.onerror=e=>rej('img load failed '+url);
+    img.src=url;
+  });
+}
+function showAll(maxW=980){
+  const sc=Math.min(1,maxW/S.W);
+  disp.width=Math.round(S.W*sc); disp.height=Math.round(S.H*sc);
+  dx2.drawImage(work,0,0,disp.width,disp.height);
+  drawOverlay(sc,0,0);
+  return {sc};
+}
+function show(x,y,w,h,scale=1){
+  disp.width=Math.round(w*scale); disp.height=Math.round(h*scale);
+  dx2.imageSmoothingEnabled=scale<1;
+  dx2.clearRect(0,0,disp.width,disp.height);
+  dx2.drawImage(work,x,y,w,h,0,0,disp.width,disp.height);
+  drawOverlay(scale,x,y);
+  return 'crop ' + [x,y,w,h,scale].join(',');
+}
+function drawOverlay(sc,ox,oy){
+  dx2.save(); dx2.scale(sc,sc); dx2.translate(-ox,-oy);
+  for(const run of S.runs){
+    dx2.strokeStyle='rgba(80,200,255,.8)'; dx2.lineWidth=1.5/sc;
+    for(const key of ['top','base']){
+      dx2.beginPath(); dx2.moveTo(run[key][0].x,run[key][0].y); dx2.lineTo(run[key][1].x,run[key][1].y); dx2.stroke();
+    }
+  }
+  dx2.strokeStyle='rgba(255,170,60,.9)';
+  for(const det of S.det) for(const b of det){
+    dx2.lineWidth=1/sc;
+    dx2.beginPath(); dx2.moveTo(b.xT,b.yT); dx2.lineTo(b.xB,b.yB); dx2.stroke();
+    dx2.strokeRect(b.xB-b.win/2, b.yT, b.win, b.yB-b.yT);
+  }
+  dx2.restore();
+}
+const px=(d,i)=>[d[i],d[i+1],d[i+2]];
+function isWhite(d,i,bright,chroma){
+  const r=d[i],g=d[i+1],b=d[i+2];
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  if((r+g+b)/3>bright && mx-mn<chroma) return true;        // lit warm white
+  return b-r>22 && b>148 && g>r && (r+g+b)/3>105;          // shadowed cool white
+}
+function detect(runIdx){
+  const run=S.runs[runIdx];
+  const img=wx.getImageData(0,0,S.W,S.H), d=img.data;
+  const n=run.n, out=[];
+  const bx0=run.base[0].x, bx1=run.base[1].x;
+  for(let i=0;i<n;i++){
+    const t=n===1?0.5:i/(n-1);
+    const cxB=lerp(run.base[0].x,run.base[1].x,t), cyB=lineY(run.base,cxB);
+    const cxT=lerp(run.top[0].x,run.top[1].x,t),  cyT=lineY(run.top,cxT);
+    // snap: shift dx maximizing white count in core window along axis
+    let best=0,bestScore=-1;
+    const coreW=Math.max(3,run.stripWin*0.5);
+    for(let dx=-run.searchPx;dx<=run.searchPx;dx++){
+      let score=0;
+      for(let f=0.12;f<=0.88;f+=0.04){
+        const yy=Math.round(lerp(cyT,cyB,f));
+        const xx=Math.round(lerp(cxT,cxB,f))+dx;
+        for(let k=-coreW/2;k<=coreW/2;k++){
+          const xi=Math.round(xx+k);
+          if(xi<1||xi>=S.W-1||yy<1||yy>=S.H-1) continue;
+          if(isWhite(d,(yy*S.W+xi)*4,run.bright,run.chroma)) score++;
+        }
+      }
+      if(score>bestScore){bestScore=score;best=dx;}
+    }
+    const xB=cxB+best, xT=cxT+best;
+    // find real top/base ends walking rows
+    const yMid=(cyT+cyB)/2;
+    const whiteAt=(yy,xx)=>{
+      let c=0;
+      for(let k=-coreW/2;k<=coreW/2;k++){
+        const xi=Math.round(xx+k);
+        if(xi<1||xi>=S.W-1||yy<1||yy>=S.H-1) continue;
+        if(isWhite(d,(Math.round(yy)*S.W+xi)*4,run.bright,run.chroma)) c++;
+      }
+      return c>=Math.max(2,coreW*0.25);
+    };
+    const axisX=yy=>lerp(xT,xB,(yy-cyT)/(cyB-cyT||1));
+    let yT=yMid, miss=0;
+    for(let yy=yMid;yy>=cyT-run.padTop-14;yy--){
+      if(whiteAt(yy,axisX(yy))){yT=yy;miss=0;}else if(++miss>7)break;
+    }
+    let yB=yMid; miss=0;
+    const yBmax=cyB+(run.maxOverBase??10);
+    for(let yy=yMid;yy<=yBmax;yy++){
+      if(whiteAt(yy,axisX(yy))){yB=yy;miss=0;}else if(++miss>7)break;
+    }
+    out.push({t,xB,xT,yT:Math.max(1,yT-(run.padTop??3)),yB:Math.min(S.H-2,yB+(run.padBot??6)),win:run.stripWin,score:bestScore});
+  }
+  S.det[runIdx]=out;
+  showAll();
+  return out.map((b,i)=>`#${i} dx?${(b.xB).toFixed(0)} yT${b.yT.toFixed(0)} yB${b.yB.toFixed(0)} score${b.score}`).join('\n');
+}
+function pushUndo(x,y,w,h){
+  x=Math.max(0,Math.round(x)); y=Math.max(0,Math.round(y));
+  w=Math.min(S.W-x,Math.round(w)); h=Math.min(S.H-y,Math.round(h));
+  if(w<1||h<1) return null;
+  S.undoStack.push({x,y,img:wx.getImageData(x,y,w,h)});
+  if(S.undoStack.length>80)S.undoStack.shift();
+  return {x,y,w,h};
+}
+function undo(){ const u=S.undoStack.pop(); if(u){wx.putImageData(u.img,u.x,u.y); showAll(); return 'undone';} return 'empty'; }
+
+function fillRowRun(d,W,yy,x0,x1,rnd){
+  // mirror-fill: left half reflects pixels left of x0, right half reflects right of x1,
+  // cross-blended in the middle to avoid a seam; preserves texture better than lerp.
+  const n=x1-x0+1;
+  for(let x=x0;x<=x1;x++){
+    const k=x-x0;
+    const lx=Math.max(0,x0-1-k), rx=Math.min(W-1,x1+1+(n-1-k));
+    const li=(yy*W+lx)*4, ri=(yy*W+rx)*4, i=(yy*W+x)*4;
+    let tt=(k+0.5)/n; tt=clamp((tt-0.35)/0.3,0,1); // 0=left half, 1=right half
+    const nz=(rnd()-0.5)*5;
+    d[i]  =clamp(lerp(d[li],d[ri],tt)+nz,0,255);
+    d[i+1]=clamp(lerp(d[li+1],d[ri+1],tt)+nz,0,255);
+    d[i+2]=clamp(lerp(d[li+2],d[ri+2],tt)+nz,0,255);
+  }
+}
+let seed=12345; const rnd=()=>{seed=seed*1103515245+12345&0x7fffffff;return seed/0x7fffffff;};
+
+function erase(runIdx){
+  const run=S.runs[runIdx], det=S.det[runIdx];
+  if(!det) return 'run detect() first';
+  for(const b of det){
+    const x0=Math.round(Math.min(b.xT,b.xB)-b.win*0.9), x1=Math.round(Math.max(b.xT,b.xB)+b.win*0.9);
+    const reg=pushUndo(x0,b.yT,x1-x0+1,b.yB-b.yT+1);
+    if(!reg) continue;
+    const band=wx.getImageData(0,b.yT,S.W,b.yB-b.yT+1), d=band.data;
+    const coreHalf=Math.max(2,run.stripWin*(run.forceCore??0.4)/1);
+    for(let yy=0;yy<band.height;yy++){
+      const gy=b.yT+yy;
+      const ax=Math.round(lerp(b.xT,b.xB,(gy-b.yT)/Math.max(1,b.yB-b.yT)));
+      // measure actual white run around axis
+      let lo=ax,hi=ax;
+      const lim=Math.round(run.stripWin*0.75);
+      let found=false;
+      for(let xx=ax-Math.round(coreHalf);xx<=ax+Math.round(coreHalf);xx++){
+        if(xx>0&&xx<S.W&&isWhite(d,(yy*S.W+xx)*4,run.bright,run.chroma)){found=true;lo=Math.min(lo,xx);hi=Math.max(hi,xx);}
+      }
+      if(found){
+        while(lo>ax-lim && lo>1 && isWhite(d,(yy*S.W+lo-1)*4,run.bright,run.chroma))lo--;
+        while(hi<ax+lim && hi<S.W-2 && isWhite(d,(yy*S.W+hi+1)*4,run.bright,run.chroma))hi++;
+      } else { lo=ax-Math.round(coreHalf); hi=ax+Math.round(coreHalf); }
+      fillRowRun(d,S.W,yy,Math.max(1,lo-1),Math.min(S.W-2,hi+1),rnd);
+    }
+    // vertical 3-tap smooth on the strip zone
+    const sm=new Uint8ClampedArray(d);
+    for(let yy=1;yy<band.height-1;yy++){
+      for(let xx=Math.max(1,Math.round(Math.min(b.xT,b.xB)-b.win));xx<=Math.min(S.W-2,Math.round(Math.max(b.xT,b.xB)+b.win));xx++){
+        for(let k=0;k<3;k++){
+          const i=(yy*S.W+xx)*4+k;
+          d[i]=(sm[i-S.W*4]+2*sm[i]+sm[i+S.W*4])>>2;
+        }
+      }
+    }
+    wx.putImageData(band,0,b.yT);
+  }
+  showAll();
+  return `erased run ${runIdx}: ${det.length} balusters`;
+}
+function eraseRect(x,y,w,h){
+  x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);
+  const reg=pushUndo(x-6,y,w+12,h);
+  if(!reg) return 'oob';
+  const band=wx.getImageData(0,y,S.W,h), d=band.data;
+  for(let yy=0;yy<h;yy++) fillRowRun(d,S.W,yy,x,x+w-1,rnd);
+  const sm=new Uint8ClampedArray(d);
+  for(let yy=1;yy<h-1;yy++)for(let xx=x-2;xx<=x+w+1;xx++){
+    if(xx<1||xx>=S.W-1)continue;
+    for(let k=0;k<3;k++){const i=(yy*S.W+xx)*4+k;d[i]=(sm[i-S.W*4]+2*sm[i]+sm[i+S.W*4])>>2;}
+  }
+  wx.putImageData(band,0,y);
+  showAll();
+  return 'rect erased';
+}
+function geometry(){
+  // app format: runs with top/base lines and per-baluster {t, dy}
+  return S.runs.map((run,ri)=>{
+    const det=S.det[ri]||[];
+    const bx0=run.base[0].x, bx1=run.base[1].x;
+    return {
+      top:[{...run.top[0]},{...run.top[1]}],
+      base:[{...run.base[0]},{...run.base[1]}],
+      bals:det.map(b=>({
+        t:+( (b.xB-bx0)/(bx1-bx0) ).toFixed(4),
+        dy:+( b.yB-(run.padBot??6)-lineY(run.base,b.xB) ).toFixed(1)
+      }))
+    };
+  });
+}
+async function save(name, quality=0.85){
+  const plate=work.toDataURL('image/jpeg',quality);
+  const r1=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({file:`scenes/${name}.jpg`,dataURL:plate})}).then(r=>r.json());
+  const r2=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({file:`scenes/${name}.json`,text:JSON.stringify({w:S.W,h:S.H,runs:geometry()},null,1)})}).then(r=>r.json());
+  status(JSON.stringify([r1,r2]));
+  return [r1,r2];
+}
+/* ===== seed-based spindle detection v2 =====
+   S.spindles = [{x,y,lean:0,win:26,eraseOnly:false,capT:null,capB:null}]
+   S.occluders = [ [{x,y},...] polygons ]  — rows inside are skipped by erase2
+   detect2() -> tracks each spindle, fits axis line, finds ends; S.det2
+   erase2()  -> erases all detected spindles
+*/
+function inPoly(p,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    if((poly[i].y>p.y)!==(poly[j].y>p.y) &&
+       p.x<(poly[j].x-poly[i].x)*(p.y-poly[i].y)/(poly[j].y-poly[i].y)+poly[i].x) inside=!inside;
+  }
+  return inside;
+}
+function occluded(x,y){ return (S.occluders||[]).some(pl=>inPoly({x,y},pl)); }
+function bestRun(d,yy,xc,win,opts){
+  // find white run near xc on row yy; returns {lo,hi,cx} or null
+  const tries=[{b:170,c:42,contrast:0},{b:135,c:52,contrast:12},{b:112,c:58,contrast:14}];
+  for(const tr of (opts&&opts.tries||tries)){
+    let bestR=null;
+    for(let x0=Math.round(xc-win);x0<=Math.round(xc+win);x0++){
+      if(x0<2||x0>=S.W-2) continue;
+      if(!isWhite(d,(yy*S.W+x0)*4,tr.b,tr.c)) continue;
+      let lo=x0,hi=x0;
+      while(hi<S.W-3&&isWhite(d,(yy*S.W+hi+1)*4,tr.b,tr.c))hi++;
+      const w=hi-lo+1;
+      if(w>=2&&w<=win*1.5){
+        if(tr.contrast>0){
+          const li=(yy*S.W+Math.max(0,lo-4))*4, ri=(yy*S.W+Math.min(S.W-1,hi+4))*4;
+          const lb=(d[li]+d[li+1]+d[li+2])/3, rb=(d[ri]+d[ri+1]+d[ri+2])/3;
+          const cb=(d[(yy*S.W+Math.round((lo+hi)/2))*4]+d[(yy*S.W+Math.round((lo+hi)/2))*4+1]+d[(yy*S.W+Math.round((lo+hi)/2))*4+2])/3;
+          if(cb-Math.max(lb,rb)<tr.contrast){ x0=hi; continue; }
+        }
+        const cx=(lo+hi)/2;
+        if(!bestR||Math.abs(cx-xc)<Math.abs(bestR.cx-xc)) bestR={lo,hi,cx,w};
+        x0=hi;
+      } else x0=hi;
+    }
+    if(bestR) return bestR;
+  }
+  return null;
+}
+function detect2(){
+  const img=wx.getImageData(0,0,S.W,S.H), d=img.data;
+  S.det2=[];
+  for(const sd of S.spindles){
+    const win=sd.win||26;
+    if(sd.noTrack){
+      // explicit axis: {x,y}=top, {x2,y2}=base
+      const b=(sd.x2-sd.x)/((sd.y2-sd.y)||1), a=sd.x-b*sd.y;
+      S.det2.push({sd,a,b,yT:sd.y,yB:sd.y2,xT:sd.x,xB:sd.x2,win,eraseOnly:!!sd.eraseOnly,pts:0});
+      continue;
+    }
+    const pts=[];
+    for(const dir of [-1,1]){
+      let miss=0;
+      for(let yy=sd.y+(dir<0?0:6); yy>4&&yy<S.H-4; yy+=6*dir){
+        if(sd.capT!=null&&yy<sd.capT) break;
+        if(sd.capB!=null&&yy>sd.capB) break;
+        const xc=sd.x+(sd.lean||0)*(yy-sd.y)/1000;
+        if(occluded(xc,yy)){ continue; } // skip occluded rows, keep walking
+        const r=bestRun(d,Math.round(yy),xc,win,sd);
+        if(r){ pts.push({y:yy,cx:r.cx}); miss=0; }
+        else if(++miss>7) break;
+      }
+    }
+    if(pts.length<4){ S.det2.push({bad:true,sd,pts:pts.length}); continue; }
+    // least squares x = a + b*y, one outlier-rejection pass
+    const fit=(ps)=>{
+      const n=ps.length, sy=ps.reduce((s,p)=>s+p.y,0), sx=ps.reduce((s,p)=>s+p.cx,0);
+      const syy=ps.reduce((s,p)=>s+p.y*p.y,0), sxy=ps.reduce((s,p)=>s+p.y*p.cx,0);
+      const b=(n*sxy-sy*sx)/(n*syy-sy*sy||1), a=(sx-b*sy)/n;
+      return {a,b};
+    };
+    let f=fit(pts);
+    let kept=pts;
+    for(let pass=0;pass<2;pass++){
+      // re-track along fitted axis, then refit with outlier rejection
+      const pts2=[];
+      let missT=0;
+      for(let yy=Math.min(...kept.map(p=>p.y))-6; yy>4; yy-=6){
+        if(sd.capT!=null&&yy<sd.capT)break;
+        if(occluded(f.a+f.b*yy,yy))continue;
+        const r=bestRun(d,Math.round(yy),f.a+f.b*yy,win*0.8,sd);
+        if(r){pts2.push({y:yy,cx:r.cx});missT=0;}else if(++missT>6)break;
+      }
+      let missB=0;
+      for(let yy=Math.max(...kept.map(p=>p.y))+6; yy<S.H-4; yy+=6){
+        if(sd.capB!=null&&yy>sd.capB)break;
+        if(occluded(f.a+f.b*yy,yy))continue;
+        const r=bestRun(d,Math.round(yy),f.a+f.b*yy,win*0.8,sd);
+        if(r){pts2.push({y:yy,cx:r.cx});missB=0;}else if(++missB>6)break;
+      }
+      for(const p of kept){
+        const r=bestRun(d,Math.round(p.y),f.a+f.b*p.y,win*0.8,sd);
+        if(r)pts2.push({y:p.y,cx:r.cx});
+      }
+      if(pts2.length<4)break;
+      let f2=fit(pts2);
+      const resid=pts2.map(p=>Math.abs(f2.a+f2.b*p.y-p.cx));
+      const sg=Math.sqrt(resid.reduce((s,r)=>s+r*r,0)/pts2.length)||1;
+      kept=pts2.filter((p,i)=>resid[i]<Math.max(3,2*sg));
+      if(kept.length>=4) f=fit(kept);
+    }
+    const ys=kept.map(p=>p.y);
+    let yT=Math.min(...ys), yB=Math.max(...ys);
+    yT=(sd.capT!=null)?sd.capT:Math.max(2,yT-(sd.padT??4));
+    yB=(sd.capB!=null)?sd.capB:Math.min(S.H-3,yB+(sd.padB??8));
+    S.det2.push({sd,a:f.a,b:f.b,yT,yB,xT:f.a+f.b*yT,xB:f.a+f.b*yB,win,eraseOnly:!!sd.eraseOnly,pts:kept.length});
+  }
+  // overlay
+  showAll();
+  const sc=disp.width/S.W;
+  dx2.save(); dx2.scale(sc,sc);
+  dx2.strokeStyle='rgba(255,120,40,.95)'; dx2.lineWidth=2/sc;
+  for(const t of S.det2){
+    if(t.bad) continue;
+    dx2.beginPath(); dx2.moveTo(t.xT,t.yT); dx2.lineTo(t.xB,t.yB); dx2.stroke();
+    dx2.strokeRect(Math.min(t.xT,t.xB)-t.win/2, t.yT, Math.abs(t.xB-t.xT)+t.win, t.yB-t.yT);
+  }
+  dx2.strokeStyle='rgba(100,255,120,.9)';
+  for(const pl of (S.occluders||[])){
+    dx2.beginPath(); pl.forEach((p,i)=>i?dx2.lineTo(p.x,p.y):dx2.moveTo(p.x,p.y)); dx2.closePath(); dx2.stroke();
+  }
+  dx2.restore();
+  return S.det2.map((t,i)=>t.bad?`#${i} BAD pts=${t.pts}`:`#${i} xB${t.xB.toFixed(0)} yB${t.yB} xT${t.xT.toFixed(0)} yT${t.yT} pts${t.pts}`).join('\n');
+}
+function erase2(){
+  let count=0;
+  for(const t of S.det2){
+    if(t.bad) continue;
+    const x0=Math.round(Math.min(t.xT,t.xB)-t.win), x1=Math.round(Math.max(t.xT,t.xB)+t.win);
+    pushUndo(x0,t.yT,x1-x0+1,t.yB-t.yT+1);
+    const band=wx.getImageData(0,t.yT,S.W,t.yB-t.yT+1), d=band.data;
+    const H=t.yB-t.yT;
+    for(let yy=0;yy<band.height;yy++){
+      const gy=t.yT+yy;
+      const ax=t.a+t.b*gy;
+      if(occluded(ax,gy)) continue;
+      // deterministic: known turned-spindle silhouette (square top, turned mid, square foot)
+      const f=yy/Math.max(1,H);
+      let prof;
+      if(f<0.24) prof=1.0;
+      else if(f<0.30) prof=1.10;
+      else if(f<0.76) prof=0.70;
+      else if(f<0.84) prof=1.10;
+      else prof=1.02;
+      const half=Math.round(t.win*prof*0.5)+7;
+      fillRowRun(d,S.W,yy,Math.max(1,Math.round(ax)-half),Math.min(S.W-2,Math.round(ax)+half),rnd);
+    }
+    const sm=new Uint8ClampedArray(d);
+    for(let yy=1;yy<band.height-1;yy++){
+      for(let xx=Math.max(1,x0);xx<=Math.min(S.W-2,x1);xx++){
+        if(occluded(xx,t.yT+yy)) continue;
+        for(let k=0;k<3;k++){const i=(yy*S.W+xx)*4+k;d[i]=(sm[i-S.W*4]+2*sm[i]+sm[i+S.W*4])>>2;}
+      }
+    }
+    wx.putImageData(band,0,t.yT);
+    count++;
+  }
+  showAll();
+  return `erased ${count} spindles`;
+}
+function geometry2(){
+  return (S.det2||[]).filter(t=>!t.bad&&!t.eraseOnly).map(t=>({
+    xT:+t.xT.toFixed(1), yT:t.yT, xB:+t.xB.toFixed(1), yB:t.yB
+  }));
+}
+async function save2(name, quality=0.85, meta={}){
+  const plate=work.toDataURL('image/jpeg',quality);
+  const r1=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({file:`scenes/${name}.jpg`,dataURL:plate})}).then(r=>r.json());
+  const r2=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({file:`scenes/${name}.json`,text:JSON.stringify({w:S.W,h:S.H,balusters:geometry2(),occluders:S.occluders||[],...meta},null,1)})}).then(r=>r.json());
+  status(JSON.stringify([r1,r2]));
+  return [r1,r2];
+}
+window.detect2=detect2; window.erase2=erase2; window.geometry2=geometry2; window.save2=save2;
+
+/* ===== v3: ridge follower ===== */
+function follow(seed){
+  // seed: {x, y, down:true/up, win, capB, capT, w0}   returns rows [{y,lo,hi,cx}]
+  const img=wx.getImageData(0,0,S.W,S.H), d=img.data;
+  const win=seed.win||34;
+  const rows=[];
+  const step=3;
+  const scan=(dir)=>{
+    let px=seed.x, slope=seed.slope??0.14, miss=0, lastW=seed.w0||win*0.8;
+    for(let yy=seed.y+ (dir>0?0:-step); yy>4 && yy<S.H-4; yy+=step*dir){
+      if(seed.capB!=null && yy>seed.capB) break;
+      if(seed.capT!=null && yy<seed.capT) break;
+      const pred=px+slope*step*dir;
+      const r=bestRun(d,Math.round(yy),pred,Math.max(20,lastW*0.9+8),
+        {tries:[{b:168,c:45,contrast:0},{b:128,c:60,contrast:0}]});
+      if(r && Math.abs(r.cx-pred)<(seed.maxJump??26) && r.w<win*1.6){
+        rows.push({y:yy,lo:r.lo,hi:r.hi,cx:r.cx});
+        const nSlope=(r.cx-px)/(step*dir);
+        slope=slope*0.8+nSlope*0.2;
+        px=r.cx; lastW=r.w*0.5+lastW*0.5; miss=0;
+      } else {
+        px=pred;
+        if(++miss>(seed.grace??12)) break;
+      }
+    }
+  };
+  scan(1); if(seed.up!==false){ let tmp=rows.length; scan(-1); }
+  rows.sort((a,b)=>a.y-b.y);
+  return rows;
+}
+function detect3(seeds){
+  S.tracks=[];
+  for(const sd of seeds){
+    const rows=follow(sd);
+    if(rows.length<6){ S.tracks.push({sd,rows,bad:rows.length<6}); continue; }
+    if(sd.extendT!=null && rows.length>6 && rows[0].y > sd.extendT+8){
+      const first=rows[0], last=rows[rows.length-1];
+      const sl=clamp((last.cx-first.cx)/Math.max(1,last.y-first.y),-0.2,0.2);
+      const wm=rows.slice(0,12).map(r=>r.hi-r.lo).sort((a,b)=>a-b)[6]||14;
+      const add=[];
+      for(let yy=first.y-3; yy>=sd.extendT; yy-=3){
+        const nx=first.cx+sl*(yy-first.y);
+        add.push({y:yy, lo:nx-wm/2, hi:nx+wm/2, cx:nx});
+      }
+      rows.unshift(...add.reverse());
+    }
+    if(sd.extendB && rows[rows.length-1].y < sd.extendB){
+      const tail=rows.slice(-12);
+      const first=rows[0], last=rows[rows.length-1];
+      const sl=clamp((last.cx-first.cx)/Math.max(1,last.y-first.y),-0.2,0.2); // global slope, robust to tail noise
+      const wm=tail.map(r=>r.hi-r.lo).sort((a,b)=>a-b)[Math.floor(tail.length/2)];
+      let {cx,y}=rows[rows.length-1];
+      for(let yy=y+3; yy<=sd.extendB; yy+=3){
+        const nx=cx+sl*(yy-y);
+        rows.push({y:yy, lo:nx-wm/2, hi:nx+wm/2, cx:nx});
+      }
+    }
+    S.tracks.push({sd,rows});
+  }
+  showAll();
+  const sc=disp.width/S.W;
+  dx2.save(); dx2.scale(sc,sc);
+  for(const t of S.tracks){
+    dx2.strokeStyle=t.bad?'rgba(255,60,60,.9)':'rgba(255,170,40,.9)';
+    dx2.lineWidth=2/sc;
+    dx2.beginPath();
+    t.rows.forEach((r,i)=>i?dx2.lineTo(r.cx,r.y):dx2.moveTo(r.cx,r.y));
+    dx2.stroke();
+  }
+  dx2.restore();
+  return S.tracks.map((t,i)=>{
+    if(!t.rows.length) return `#${i} EMPTY`;
+    const a=t.rows[0], b=t.rows[t.rows.length-1];
+    return `#${i}${t.bad?' BAD':''} rows${t.rows.length} top(${a.cx.toFixed(0)},${a.y}) bot(${b.cx.toFixed(0)},${b.y})`;
+  }).join('\n');
+}
+function erase3(padX=4, padTop=4, padBot=10){
+  let n=0;
+  for(const t of S.tracks){
+    if(t.bad||!t.rows.length) continue;
+    const rows=t.rows;
+    const y0=Math.max(1,rows[0].y-padTop), y1=Math.min(S.H-2,rows[rows.length-1].y+padBot);
+    const xs=rows.flatMap(r=>[r.lo,r.hi]);
+    const x0=Math.min(...xs)-padX-6, x1=Math.max(...xs)+padX+6;
+    pushUndo(x0,y0,x1-x0+1,y1-y0+1);
+    const band=wx.getImageData(0,y0,S.W,y1-y0+1), d=band.data;
+    // interpolate lo/hi over all rows in range
+    const loAt=y=>{
+      let prev=rows[0], next=rows[rows.length-1];
+      for(const r of rows){ if(r.y<=y)prev=r; if(r.y>=y){next=r;break;} }
+      const tt=next.y===prev.y?0:(y-prev.y)/(next.y-prev.y);
+      return {lo:lerp(prev.lo,next.lo,tt), hi:lerp(prev.hi,next.hi,tt)};
+    };
+    for(let yy=y0;yy<=y1;yy++){
+      const {lo,hi}=loAt(yy);
+      fillRowRun(d,S.W,yy-y0,Math.max(1,Math.round(lo)-padX),Math.min(S.W-2,Math.round(hi)+padX),rnd);
+    }
+    const sm=new Uint8ClampedArray(d);
+    for(let yy=1;yy<band.height-1;yy++)for(let xx=Math.max(1,x0);xx<=Math.min(S.W-2,x1);xx++){
+      for(let k=0;k<3;k++){const i=(yy*S.W+xx)*4+k;d[i]=(sm[i-S.W*4]+2*sm[i]+sm[i+S.W*4])>>2;}
+    }
+    // horizontal blend to hide strip-boundary seams
+    const sm2=new Uint8ClampedArray(d);
+    for(let yy=0;yy<band.height;yy++)for(let xx=Math.max(1,x0);xx<=Math.min(S.W-2,x1);xx++){
+      for(let k=0;k<3;k++){const i=(yy*S.W+xx)*4+k;d[i]=(sm2[i-4]+2*sm2[i]+sm2[i+4])>>2;}
+    }
+    wx.putImageData(band,0,y0);
+    n++;
+  }
+  showAll();
+  return `erased ${n} tracks`;
+}
+function geometry3(){
+  return (S.tracks||[]).filter(t=>!t.bad&&t.rows.length&&!t.sd.eraseOnly).map(t=>{
+    const a=t.rows[0], b=t.rows[t.rows.length-1];
+    return {xT:+a.cx.toFixed(1), yT:a.y, xB:+b.cx.toFixed(1), yB:b.y};
+  });
+}
+window.follow=follow; window.detect3=detect3; window.erase3=erase3; window.geometry3=geometry3;
+
+/* polish: bias-correct erased strips (found by diffing vs the before image) toward flanking tones */
+async function polish(plateUrl, beforeUrl, outName, diffThresh=16, strength=0.78){
+  const [p,b]=await Promise.all([new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=plateUrl;}),
+                                 new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=beforeUrl;})]);
+  S.W=work.width=p.width; S.H=work.height=p.height;
+  wx.drawImage(p,0,0);
+  const bc=document.createElement('canvas'); bc.width=p.width; bc.height=p.height;
+  const bx=bc.getContext('2d'); bx.drawImage(b,0,0,p.width,p.height);
+  const pd=wx.getImageData(0,0,S.W,S.H), bd=bx.getImageData(0,0,S.W,S.H);
+  const d=pd.data, e=bd.data;
+  // diff mask
+  const mask=new Uint8Array(S.W*S.H);
+  for(let i=0;i<S.W*S.H;i++){
+    const j=i*4;
+    const df=Math.abs(d[j]-e[j])+Math.abs(d[j+1]-e[j+1])+Math.abs(d[j+2]-e[j+2]);
+    if(df>diffThresh*3) mask[i]=1;
+  }
+  // dilate mask horizontally by 2
+  const m2=new Uint8Array(mask);
+  for(let y=0;y<S.H;y++)for(let x=2;x<S.W-2;x++){
+    const i=y*S.W+x;
+    if(mask[i-2]||mask[i-1]||mask[i+1]||mask[i+2]) m2[i]=1;
+  }
+  // per-row: bias-correct each masked run toward flanking plate tones
+  for(let y=0;y<S.H;y++){
+    let x=0;
+    while(x<S.W){
+      if(!m2[y*S.W+x]){x++;continue;}
+      let lo=x, hi=x;
+      while(hi<S.W-1&&m2[y*S.W+hi+1])hi++;
+      const w=hi-lo+1;
+      if(w>=3&&w<130){
+        const fm=(xa,xb)=>{let r=0,g=0,bb=0,n=0;
+          for(let xx=Math.max(0,xa);xx<=Math.min(S.W-1,xb);xx++){const j=(y*S.W+xx)*4;r+=d[j];g+=d[j+1];bb+=d[j+2];n++;}
+          return n?[r/n,g/n,bb/n]:null;};
+        const L=fm(lo-7,lo-2), R=fm(hi+2,hi+7);
+        if(L&&R){
+          const sm=fm(lo,hi);
+          const tgt=[(L[0]+R[0])/2,(L[1]+R[1])/2,(L[2]+R[2])/2];
+          const bias=[(sm[0]-tgt[0])*strength,(sm[1]-tgt[1])*strength,(sm[2]-tgt[2])*strength];
+          for(let xx=lo;xx<=hi;xx++){
+            const j=(y*S.W+xx)*4;
+            d[j]=clamp(d[j]-bias[0],0,255); d[j+1]=clamp(d[j+1]-bias[1],0,255); d[j+2]=clamp(d[j+2]-bias[2],0,255);
+          }
+        }
+      }
+      x=hi+1;
+    }
+  }
+  wx.putImageData(pd,0,0);
+  // gentle vertical smooth inside mask
+  const pd2=wx.getImageData(0,0,S.W,S.H), dd=pd2.data;
+  const cp=new Uint8ClampedArray(dd);
+  for(let y=1;y<S.H-1;y++)for(let x=0;x<S.W;x++){
+    if(!m2[y*S.W+x])continue;
+    for(let k=0;k<3;k++){const j=(y*S.W+x)*4+k; dd[j]=(cp[j-S.W*4]+2*cp[j]+cp[j+S.W*4])>>2;}
+  }
+  wx.putImageData(pd2,0,0);
+  showAll();
+  const r=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({file:`scenes/${outName}.jpg`,dataURL:work.toDataURL('image/jpeg',0.85)})}).then(r=>r.json());
+  return r;
+}
+window.polish=polish;
+/* polish2: conservative — only correct strips whose two flanks agree (uniform background) */
+async function polish2(plateUrl, beforeUrl, outName, diffThresh=16, strength=0.7, flankTol=26){
+  const [p,b]=await Promise.all([new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=plateUrl;}),
+                                 new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=beforeUrl;})]);
+  S.W=work.width=p.width; S.H=work.height=p.height;
+  wx.drawImage(p,0,0);
+  const bc=document.createElement('canvas'); bc.width=p.width; bc.height=p.height;
+  const bx=bc.getContext('2d'); bx.drawImage(b,0,0,p.width,p.height);
+  const pd=wx.getImageData(0,0,S.W,S.H), bd=bx.getImageData(0,0,S.W,S.H);
+  const d=pd.data, e=bd.data;
+  const mask=new Uint8Array(S.W*S.H);
+  for(let i=0;i<S.W*S.H;i++){
+    const j=i*4;
+    if(Math.abs(d[j]-e[j])+Math.abs(d[j+1]-e[j+1])+Math.abs(d[j+2]-e[j+2])>diffThresh*3) mask[i]=1;
+  }
+  const m2=new Uint8Array(mask);
+  for(let y=0;y<S.H;y++)for(let x=2;x<S.W-2;x++){
+    const i=y*S.W+x;
+    if(mask[i-2]||mask[i-1]||mask[i+1]||mask[i+2]) m2[i]=1;
+  }
+  let fixed=0, skipped=0;
+  for(let y=0;y<S.H;y++){
+    let x=0;
+    while(x<S.W){
+      if(!m2[y*S.W+x]){x++;continue;}
+      let lo=x, hi=x;
+      while(hi<S.W-1&&m2[y*S.W+hi+1])hi++;
+      const w=hi-lo+1;
+      if(w>=3&&w<130){
+        const fm=(xa,xb)=>{let r=0,g=0,bb=0,n=0;
+          for(let xx=Math.max(0,xa);xx<=Math.min(S.W-1,xb);xx++){const j=(y*S.W+xx)*4;r+=d[j];g+=d[j+1];bb+=d[j+2];n++;}
+          return n?[r/n,g/n,bb/n]:null;};
+        const L=fm(lo-7,lo-2), R=fm(hi+2,hi+7);
+        if(L&&R){
+          const flankDiff=Math.max(Math.abs(L[0]-R[0]),Math.abs(L[1]-R[1]),Math.abs(L[2]-R[2]));
+          if(flankDiff<flankTol){
+            const sm=fm(lo,hi);
+            const tgt=[(L[0]+R[0])/2,(L[1]+R[1])/2,(L[2]+R[2])/2];
+            for(let xx=lo;xx<=hi;xx++){
+              const j=(y*S.W+xx)*4;
+              d[j]=clamp(d[j]-(sm[0]-tgt[0])*strength,0,255);
+              d[j+1]=clamp(d[j+1]-(sm[1]-tgt[1])*strength,0,255);
+              d[j+2]=clamp(d[j+2]-(sm[2]-tgt[2])*strength,0,255);
+            }
+            fixed++;
+          } else skipped++;
+        }
+      }
+      x=hi+1;
+    }
+  }
+  wx.putImageData(pd,0,0);
+  const pd2=wx.getImageData(0,0,S.W,S.H), dd=pd2.data;
+  const cp=new Uint8ClampedArray(dd);
+  for(let y=1;y<S.H-1;y++)for(let x=0;x<S.W;x++){
+    if(!m2[y*S.W+x])continue;
+    for(let k=0;k<3;k++){const j=(y*S.W+x)*4+k; dd[j]=(cp[j-S.W*4]+2*cp[j]+cp[j+S.W*4])>>2;}
+  }
+  wx.putImageData(pd2,0,0);
+  showAll();
+  const r=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({file:`scenes/${outName}.jpg`,dataURL:work.toDataURL('image/jpeg',0.85)})}).then(r=>r.json());
+  return {saved:r.bytes, fixed, skipped};
+}
+window.polish2=polish2;
+
+function probe(y, minW=4, maxW=46, bright=165, chroma=46){
+  // white runs on a scanline: [{x0,x1,cx,w}]
+  y=Math.round(y);
+  const row=wx.getImageData(0,y,S.W,1).data, out=[];
+  let start=-1;
+  for(let x=0;x<S.W;x++){
+    const w=isWhite(row,x*4,bright,chroma);
+    if(w&&start<0)start=x;
+    if((!w||x===S.W-1)&&start>=0){
+      const w0=x-start;
+      if(w0>=minW&&w0<=maxW) out.push({x0:start,x1:x-1,cx:Math.round((start+x-1)/2),w:w0});
+      start=-1;
+    }
+  }
+  return out;
+}
+function probeCol(x, bright=165, chroma=46){
+  // white runs down a column: [{y0,y1,h}]
+  x=Math.round(x);
+  const col=wx.getImageData(x,0,1,S.H).data, out=[];
+  let start=-1;
+  for(let y=0;y<S.H;y++){
+    const w=isWhite(col,y*4,bright,chroma);
+    if(w&&start<0)start=y;
+    if((!w||y===S.H-1)&&start>=0){
+      if(y-start>3) out.push({y0:start,y1:y-1,h:y-start});
+      start=-1;
+    }
+  }
+  return out;
+}
+function sample(x,y,r=2){
+  const d=wx.getImageData(x-r,y-r,2*r+1,2*r+1).data;
+  let rr=0,gg=0,bb=0,n=0;
+  for(let i=0;i<d.length;i+=4){rr+=d[i];gg+=d[i+1];bb+=d[i+2];n++;}
+  return [Math.round(rr/n),Math.round(gg/n),Math.round(bb/n)];
+}
+window.S=S; window.load=load; window.detect=detect; window.erase=erase; window.eraseRect=eraseRect;
+window.undo=undo; window.show=show; window.showAll=showAll; window.geometry=geometry; window.save=save;
+window.probe=probe; window.probeCol=probeCol; window.sample=sample; window.work=work; window.wx=wx;
+window.saveCrop = async (name) => fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({file:`scenes/preview/${name}.jpg`, dataURL:disp.toDataURL('image/jpeg',0.85)})}).then(r=>r.json());
+window.grid = (x,y,w,h,scale=1) => {
+  show(x,y,w,h,scale);
+  dx2.save(); dx2.scale(scale,scale); dx2.translate(-x,-y);
+  dx2.strokeStyle='rgba(0,255,255,.55)'; dx2.fillStyle='rgba(0,255,255,.95)';
+  dx2.lineWidth=1/scale; dx2.font=(14/scale)+'px monospace';
+  for(let gx=Math.ceil(x/100)*100; gx<=x+w; gx+=100){
+    dx2.beginPath(); dx2.moveTo(gx,y); dx2.lineTo(gx,y+h); dx2.stroke();
+    dx2.fillText(gx, gx+2/scale, y+14/scale);
+    dx2.fillText(gx, gx+2/scale, y+h-6/scale);
+  }
+  for(let gy=Math.ceil(y/100)*100; gy<=y+h; gy+=100){
+    dx2.beginPath(); dx2.moveTo(x,gy); dx2.lineTo(x+w,gy); dx2.stroke();
+    dx2.fillText(gy, x+4/scale, gy-3/scale);
+    dx2.fillText(gy, x+w-52/scale, gy-3/scale);
+  }
+  dx2.restore();
+  return 'grid drawn';
+};
+</script>

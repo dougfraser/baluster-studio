@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "baluster-studio",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/AI/projects/baluster-studio/dev/serve.js"],
+      "port": 8917
+    }
+  ]
+}
