@@ -4,7 +4,7 @@
   :root{
     --bg:#ECE9E4; --panel:#F7F5F1; --panel2:#EFECE6; --ink:#26221D; --muted:#6E675E;
     --line:#D8D3CB; --accent:#8A5A28; --accent-ink:#FFFFFF; --stage:#202024;
-    --chip:#E4DFD7; --ok:#3E6B3A; --danger:#8C3B2E;
+    --chip:#E4DFD7; --danger:#8C3B2E;
     --serif:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
     --sans:'Segoe UI',system-ui,-apple-system,sans-serif;
     --mono:'Cascadia Code',Consolas,'SF Mono',monospace;
@@ -22,8 +22,8 @@
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);}
   button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-  input,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
-  input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+  select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
   #app{display:flex;flex-direction:column;height:100vh}
   header{display:flex;align-items:baseline;gap:14px;padding:10px 18px 8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -33,7 +33,6 @@
   header .spacer{flex:1}
   .btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;font-weight:600;font-size:13px}
   .btn:hover{border-color:var(--accent)}
-  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
   .btn.small{padding:3px 9px;font-size:12px;font-weight:500}
   .btn.danger{color:var(--danger)}
   .btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -41,186 +40,125 @@
   main{display:flex;flex:1;min-height:0}
   #stagewrap{flex:1;position:relative;background:var(--stage);min-width:0}
   #view{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
-  #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;max-width:min(680px,92%);
+  #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;max-width:min(640px,92%);
     background:rgba(20,18,16,.82);color:#F3EFE8;border:1px solid rgba(255,255,255,.14);
     padding:7px 14px;border-radius:9px;font-size:13px;text-align:center;pointer-events:none;backdrop-filter:blur(3px)}
-  #toolbar{position:absolute;top:12px;left:12px;display:flex;gap:6px;background:rgba(24,22,20,.78);
-    border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:5px;backdrop-filter:blur(3px);flex-wrap:wrap}
-  #toolbar button{color:#E8E3DA;padding:5px 11px;border-radius:7px;font-size:12.5px;font-weight:600}
-  #toolbar button:hover{background:rgba(255,255,255,.10)}
-  #toolbar button.on{background:var(--accent);color:var(--accent-ink)}
+  #fitBtn{position:absolute;top:12px;left:12px;background:rgba(24,22,20,.78);color:#E8E3DA;
+    border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:6px 13px;font-size:12.5px;font-weight:600}
   #zoomlbl{position:absolute;top:18px;right:14px;color:#B9B2A6;font:11px var(--mono);pointer-events:none}
 
   aside{width:340px;overflow-y:auto;background:var(--panel);border-left:1px solid var(--line);padding:14px 16px 40px;flex-shrink:0}
   section{margin-bottom:20px}
-  h2{font-family:var(--serif);font-size:15px;margin:0 0 2px;display:flex;align-items:baseline;gap:8px}
-  h2 .n{font:600 10.5px var(--mono);color:var(--accent);border:1px solid var(--accent);border-radius:50%;
-    width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transform:translateY(-1px)}
+  h2{font-family:var(--serif);font-size:15px;margin:0 0 2px}
   .sub{color:var(--muted);font-size:12px;margin:2px 0 9px}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:7px 0}
   .row label{font-size:12.5px;color:var(--muted)}
   hr{border:none;border-top:1px solid var(--line);margin:16px 0}
 
   .chips{display:flex;gap:6px;flex-wrap:wrap}
-  .chip{background:var(--chip);border:1px solid transparent;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:600}
+  .chip{background:var(--chip);border:1px solid transparent;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600}
   .chip.on{border-color:var(--accent);color:var(--accent);background:transparent}
   .chip:hover{border-color:var(--accent)}
 
-  .fins{display:flex;gap:7px;flex-wrap:wrap}
-  .fin{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);padding:0;position:relative}
-  .fin.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset, 0 0 0 1.5px var(--panel) inset}
-  .fin span{position:absolute;left:50%;bottom:-17px;transform:translateX(-50%);font-size:9.5px;color:var(--muted);white-space:nowrap;display:none}
-  .fin:hover span{display:block}
-  .finrow{margin-bottom:18px}
-
   #gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
-  .dcard{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:5px 3px 4px;
+  .dcard{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:6px 3px 5px;
     display:flex;flex-direction:column;align-items:center;gap:2px}
   .dcard:hover{border-color:var(--accent)}
   .dcard.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-  .dcard canvas{width:26px;height:78px}
-  .dcard .dn{font-size:9.8px;line-height:1.15;text-align:center;font-weight:600}
+  .dcard canvas{width:30px;height:90px}
+  .dcard .dn{font-size:10px;line-height:1.15;text-align:center;font-weight:600}
   .dcard .dp{font:9px var(--mono);color:var(--muted)}
 
-  #patslots{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-  .slot{display:flex;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:2px 2px 2px 6px;gap:2px}
-  .slot .si{font:600 10px var(--mono);color:var(--accent)}
-  .slot select{border:none;background:none;padding:2px;font-size:11.5px;max-width:98px}
-  .slot .x{color:var(--muted);padding:0 5px;font-size:13px;border-radius:4px}
-  .slot .x:hover{color:var(--danger)}
-  #elev{width:100%;border-radius:8px;border:1px solid var(--line);display:block;margin-top:9px}
-  #cost{font:12px var(--mono);color:var(--muted);margin-top:6px}
+  #presets{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+  .pcard{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:7px 6px 5px;
+    display:flex;flex-direction:column;align-items:center;gap:3px}
+  .pcard:hover{border-color:var(--accent)}
+  .pcard.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .pcard canvas{width:120px;height:58px}
+  .pcard .pn{font-size:10.5px;font-weight:600;text-align:center;line-height:1.15}
 
-  .runitem{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);
-    border-radius:8px;padding:6px 9px;margin:6px 0;font-size:12.5px}
-  .runitem b{font-family:var(--mono);font-weight:600}
-  .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-  .stepper button{padding:2px 9px;font-weight:700}
-  .stepper button:hover{background:var(--chip)}
-  .stepper span{font:12px var(--mono);padding:0 6px;min-width:26px;text-align:center}
+  .slotrow{display:flex;gap:6px;align-items:center;margin-top:9px}
+  .slotrow select{flex:1;min-width:0;font-size:12px}
+  #cost{font:12px var(--mono);color:var(--muted);margin-top:10px;line-height:1.5}
 
   .lookitem{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;
     padding:6px 9px;margin:6px 0;font-size:12.5px;background:var(--panel2)}
   .lookitem .ln{flex:1;font-weight:600;cursor:pointer}
   .lookitem .ln:hover{color:var(--accent)}
   .tag{font:600 9.5px var(--mono);background:var(--chip);border-radius:4px;padding:2px 6px;color:var(--muted)}
+  .x{color:var(--muted);padding:0 5px}
+  .x:hover{color:var(--danger)}
 
   .note{font-size:11.5px;color:var(--muted);background:var(--panel2);border-left:3px solid var(--accent);
     border-radius:0 6px 6px 0;padding:6px 9px;margin-top:8px}
-  .switch{display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer;user-select:none}
-  .switch input{accent-color:var(--accent)}
-  #calibform{display:none;margin-top:8px}
-  #calibform.show{display:block}
-  #uploadtools{display:none}
-  #uploadtools.show{display:block}
 
   @media (max-width:860px){
     main{flex-direction:column}
-    #stagewrap{height:52vh;flex:none}
+    #stagewrap{height:50vh;flex:none}
     aside{width:100%;border-left:none;border-top:1px solid var(--line);flex:1}
-    #gallery{grid-template-columns:repeat(5,1fr)}
   }
   @media (prefers-reduced-motion: no-preference){
-    .btn,.chip,.dcard,.fin{transition:border-color .12s, background .12s, color .12s}
+    .btn,.chip,.dcard,.pcard{transition:border-color .12s, background .12s, color .12s}
   }
 </style>
 
 <div id="app">
   <header>
     <div class="brand">Baluster <b>Studio</b></div>
-    <div class="eyebrow">iron try-on · your staircase</div>
+    <div class="eyebrow">black iron try-on</div>
     <div class="spacer"></div>
     <button class="btn" id="beforeBtn">Before / after</button>
     <button class="btn" id="exportBtn">Download picture</button>
-    <button class="btn danger" id="resetBtn">Start over</button>
+    <button class="btn danger small" id="resetBtn">Reset</button>
   </header>
   <main>
     <div id="stagewrap">
       <canvas id="view"></canvas>
-      <div id="toolbar">
-        <button data-tool="adjust" class="on" title="Pan and zoom">Move</button>
-        <button data-tool="run" title="Mark a railing run with 4 clicks (your own photos)">Mark run</button>
-        <button data-tool="erase" title="Drag boxes over old balusters to wipe them (your own photos)">Erase</button>
-        <button data-tool="calib" title="Drag across one existing baluster to set true scale">Scale</button>
-        <button id="fitBtn" title="Fit photo to screen">Fit</button>
-      </div>
+      <button id="fitBtn">Fit</button>
       <div id="zoomlbl"></div>
       <div id="hint"></div>
     </div>
     <aside>
 
       <section>
-        <h2><span class="n">1</span>Scene</h2>
-        <p class="sub">Three views of your staircase, ready to restyle.</p>
+        <h2>Scene</h2>
+        <p class="sub">Drag to pan · scroll or pinch to zoom.</p>
         <div class="chips" id="scenes"></div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn small" id="uploadBtn">Upload another photo…</button>
-          <input type="file" id="fileInput" accept="image/*" hidden>
-        </div>
-        <div class="note" id="photonote">The white wood balusters have been digitally removed from these photos — pick an iron design below and it appears in their place, to scale.</div>
+        <div class="note">Satin-black iron, square shoes at the base — rendered at the true width you pick below. Use <b>Before / after</b> to swipe against today’s white wood.</div>
       </section>
       <hr>
 
-      <section id="uploadtools">
-        <h2><span class="n">+</span>Your own photo</h2>
-        <p class="sub">Four clicks per run: rail above the first baluster, rail above the last, then the base of the first and last.</p>
-        <div class="row">
-          <button class="btn" id="markBtn">＋ Mark a run</button>
-          <label>Rail height</label>
-          <input id="railH" type="number" value="35" min="28" max="44" step="0.5" style="width:58px"> in
-        </div>
-        <div id="runlist"></div>
-        <div class="row">
-          <button class="btn" id="autoEraseBtn">Auto-erase old balusters</button>
-          <button class="btn small" id="undoBtn">Undo</button>
-          <label>Wipe width</label>
-          <input id="eraseW" type="number" value="2.2" step="0.1" min="0.8" max="6" style="width:52px"> in
-        </div>
-        <div class="row">
-          <button class="btn small" id="calibBtn">Set true scale…</button>
-        </div>
-        <div id="calibform">
-          <div class="row">That baluster is <input id="calibIn" type="number" value="1.75" step="0.0625" min="0.5" max="4" style="width:64px"> inches wide
-          <button class="btn small primary" id="calibApply">Apply</button></div>
-        </div>
-        <hr>
+      <section>
+        <h2>Width</h2>
+        <p class="sub">The whole staircase uses one width.</p>
+        <div class="chips" id="widths"></div>
       </section>
+      <hr>
 
       <section>
-        <h2><span class="n">2</span>Iron design</h2>
-        <p class="sub">Sizes, styles and prices from the JMP Wood catalog.</p>
-
-        <div class="row"><label style="min-width:44px">Width</label><div class="chips" id="widths"></div></div>
-        <div class="row finrow"><label style="min-width:44px">Finish</label><div class="fins" id="fins"></div></div>
-
+        <h2>The four designs</h2>
+        <p class="sub">Tap one to fill the whole rail with it. JMP part &amp; price each.</p>
         <div id="gallery"></div>
+      </section>
+      <hr>
 
-        <div class="row" style="margin-top:12px"><label>Pattern (repeats)</label>
-          <select id="presetSel">
-            <option value="">presets…</option>
-            <option value="plain">All plain</option>
-            <option value="twist">All single twist</option>
-            <option value="plain,twist">Alternating plain / twist</option>
-            <option value="plain,twist,plain">Plain · twist · plain</option>
-            <option value="plain,double-twist,plain">Plain · double twist · plain</option>
-            <option value="plain,basket,plain">Plain · basket · plain</option>
-            <option value="twist,basket,twist">Twist · basket · twist</option>
-            <option value="plain,knuckle,plain">Plain · knuckle · plain</option>
-          </select>
+      <section>
+        <h2>Pattern</h2>
+        <p class="sub">The sequence repeats along the rail. Tap a preset, or build your own below (up to 3 per repeat).</p>
+        <div id="presets"></div>
+        <div class="slotrow">
+          <select id="slot0"></select>
+          <select id="slot1"></select>
+          <select id="slot2"></select>
         </div>
-        <div id="patslots"></div>
-        <div class="row">
-          <label class="switch"><input type="checkbox" id="shoesChk" checked> Iron shoes at the base</label>
-        </div>
-        <canvas id="elev"></canvas>
         <div id="cost"></div>
       </section>
       <hr>
 
       <section>
-        <h2><span class="n">3</span>Save &amp; compare looks</h2>
-        <p class="sub">Save a look, change something, then swipe the two side-by-side.</p>
-        <div class="row"><button class="btn primary" id="saveLookBtn">Save this look</button></div>
+        <h2>Save &amp; compare</h2>
+        <p class="sub">Save a look, change something, swipe them side-by-side.</p>
+        <div class="row"><button class="btn" id="saveLookBtn">Save this look</button></div>
         <div id="looklist"></div>
         <div class="row" id="comparerow" style="display:none">
           <select id="cmpA"></select> vs <select id="cmpB"></select>
@@ -228,202 +166,127 @@
         </div>
       </section>
 
-      <p class="sub" style="margin-top:26px">Catalog: <span style="font-family:var(--mono)">jmpwood.com/collections/iron-balusters</span> · 9000-series SKUs &amp; sale prices, Jul 2026. Renders are to scale but approximate — order a sample or two before committing.</p>
+      <p class="sub" style="margin-top:26px">Prices: jmpwood.com 9000-series, satin black ½″ sale prices (Jul 2026). Renders are to scale but approximate — order a sample before committing.</p>
     </aside>
   </main>
 </div>
 
 <script>
 'use strict';
-/* ================= catalog ================= */
-const FINISHES = {
-  'satin-black':  {name:'Satin Black',  edge:'#08080a', base:'#1e1e23', hi:'#5b5b66', dark:'#101014'},
-  'graphite':     {name:'Graphite',     edge:'#17181b', base:'#3d3e44', hi:'#84868f', dark:'#28292e'},
-  'ash-grey':     {name:'Ash Grey',     edge:'#3f3e42', base:'#77767a', hi:'#bcbbbf', dark:'#5c5b60'},
-  'rubbed-bronze':{name:'Rubbed Bronze',edge:'#140d07', base:'#2f2318', hi:'#8a5c2c', dark:'#1f1710'},
-  'rubbed-copper':{name:'Rubbed Copper',edge:'#170d08', base:'#3a241b', hi:'#b06a3a', dark:'#26170f'},
-  'silver-vein':  {name:'Silver Vein',  edge:'#232327', base:'#505057', hi:'#aeafb7', dark:'#3a3a40', speckle:'#cfd0d8'},
-  'white':        {name:'White',        edge:'#8f8c84', base:'#e5e3de', hi:'#ffffff', dark:'#c9c6bf'}
-};
+/* ================= catalog (black iron only) ================= */
+const FIN = {name:'Satin Black', edge:'#0a0a0d', base:'#202026', hi:'#585863', dark:'#111116'};
 const DESIGNS = {
   'plain':        {name:'Plain',          sku:'9000', price:3.97},
   'twist':        {name:'Single Twist',   sku:'9001', price:4.85},
   'double-twist': {name:'Double Twist',   sku:'9002', price:4.98},
-  'basket':       {name:'Single Basket',  sku:'9003', price:7.19},
-  'double-basket':{name:'Double Basket',  sku:'9004', price:10.77},
-  'knuckle':      {name:'Single Knuckle', sku:'9006', price:7.61},
-  'double-knuckle':{name:'Double Knuckle',sku:'9007', price:9.99},
-  'ribbon':       {name:'Single Ribbon',  sku:'9010', price:6.19},
-  'double-ribbon':{name:'Double Ribbon',  sku:'9011', price:7.59},
-  'scroll':       {name:'S Scroll',       sku:'9008', price:null},
-  'hammered':     {name:'Hammered',       sku:'9/16″', price:null},
-  'hammered-twist':{name:'Hammered Twist',sku:'9/16″', price:null}
+  'knuckle':      {name:'Single Knuckle', sku:'9006', price:7.61}
 };
 const WIDTHS = [
   {v:0.5,    label:'1/2″'},
   {v:0.5625, label:'9/16″'},
-  {v:0.625,  label:'5/8″'},
-  {v:0.75,   label:'3/4″'}
+  {v:0.625,  label:'5/8″'}
 ];
-const SCENE_DEFS = [
-  {id:'foyer',   name:'Foyer',     light:{dir:-1, alpha:0.18}},
-  {id:'flight',  name:'Staircase', light:{dir:-1, alpha:0.15}},
-  {id:'landing', name:'Landing',   light:{dir: 1, alpha:0.11}}
+const PRESETS = [
+  {name:'All plain',            pat:['plain']},
+  {name:'All single twist',     pat:['twist']},
+  {name:'All double twist',     pat:['double-twist']},
+  {name:'All knuckle',          pat:['knuckle']},
+  {name:'Plain · twist',        pat:['plain','twist']},
+  {name:'Plain · double twist', pat:['plain','double-twist']},
+  {name:'Plain · knuckle',      pat:['plain','knuckle']},
+  {name:'Twist every 3rd',      pat:['plain','twist','plain']},
+  {name:'Double every 3rd',     pat:['plain','double-twist','plain']},
+  {name:'Knuckle every 3rd',    pat:['plain','knuckle','plain']}
 ];
+const PROJECT_COUNT = 75; // whole-house estimate: stairs + balcony + hallway side
 
 /* ================= state ================= */
 const S = {
-  sceneId:null, plate:null, plateCtx:null, before:null,
-  balusters:null, occluders:null, light:{dir:-1,alpha:0.13},   // baked scenes
-  runs:[], calib:null, isUpload:false,                          // upload flow
-  cfg:{widthIn:0.5, finish:'satin-black', pattern:['plain','twist','plain'], shoes:true, railH:35},
-  looks:[], split:null,   // {mode:'before'|'looks', a,b, x}
-  view:{s:1,tx:0,ty:0},
-  tool:'adjust', runClicks:[], drag:null, marquee:null, calibLine:null,
-  undoStack:[], dirty:true,
+  sceneId:null, plate:null, before:null, balusters:null, occluders:null,
+  light:{dir:1,alpha:0.12},
+  cfg:{widthIn:0.5, pattern:['plain','twist','plain']},
+  looks:[], split:null,
+  view:{s:1,tx:0,ty:0}, drag:null, dirty:true,
   overlay:null, overlayFor:null
 };
 const $ = id => document.getElementById(id);
 const view = $('view'), vctx = view.getContext('2d');
 const DPR = Math.min(2, window.devicePixelRatio||1);
 const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-function lineY(p,x){ const [a,b]=p; return Math.abs(b.x-a.x)<1e-6 ? a.y : lerp(a.y,b.y,(x-a.x)/(b.x-a.x)); }
 function mulberry(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;};
 
-/* ================= baluster painter (vertical; caller rotates for slant) ================= */
-function metalGrad(ctx,fin,x,w){
+/* ================= iron painter ================= */
+function metalGrad(ctx,x,w){
   const g = ctx.createLinearGradient(x-w*0.75,0,x+w*0.75,0);
-  g.addColorStop(0,fin.edge); g.addColorStop(0.18,fin.hi); g.addColorStop(0.30,fin.base);
-  g.addColorStop(0.585,fin.base); g.addColorStop(0.62,fin.dark); g.addColorStop(1,fin.edge);
+  g.addColorStop(0,FIN.edge); g.addColorStop(0.18,FIN.hi); g.addColorStop(0.30,FIN.base);
+  g.addColorStop(0.585,FIN.base); g.addColorStop(0.62,FIN.dark); g.addColorStop(1,FIN.edge);
   return g;
 }
-function barRect(ctx,fin,x,w,y0,y1){
-  ctx.fillStyle = metalGrad(ctx,fin,x,w);
+function barRect(ctx,x,w,y0,y1){
+  ctx.fillStyle = metalGrad(ctx,x,w);
   ctx.fillRect(x-w/2,y0,w,y1-y0);
 }
-function drawShoe(ctx,fin,x,yB,ppi,w){
+function drawShoe(ctx,x,yB,ppi,w){
   const sw=Math.max(w*1.7, 1.15*ppi), sh=0.62*ppi, tw=w*1.28;
   ctx.beginPath();
   ctx.moveTo(x-tw/2, yB-sh); ctx.lineTo(x+tw/2, yB-sh);
   ctx.lineTo(x+sw/2, yB); ctx.lineTo(x-sw/2, yB); ctx.closePath();
-  ctx.fillStyle = metalGrad(ctx,fin,x,sw); ctx.fill();
+  ctx.fillStyle = metalGrad(ctx,x,sw); ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.10)'; ctx.fillRect(x-tw/2,yB-sh,tw,Math.max(1,sh*0.18));
 }
-function twistBand(ctx,fin,x,w,y0,y1,ppi){
+function twistBand(ctx,x,w,y0,y1,ppi){
   const period = Math.max(4, 2.7*ppi);
-  const step = Math.max(1.2, ppi*0.12);
+  const step = Math.max(1, ppi*0.1);
   ctx.beginPath();
-  const env=y=>1+0.32*Math.abs(Math.sin((y-y0)/period*Math.PI*2));
+  const env=y=>1+0.34*Math.abs(Math.sin((y-y0)/period*Math.PI*2));
   ctx.moveTo(x-(w/2)*env(y0), y0);
   for(let y=y0;y<=y1;y+=step) ctx.lineTo(x-(w/2)*env(y), y);
   ctx.lineTo(x-(w/2)*env(y1), y1);
   for(let y=y1;y>=y0;y-=step) ctx.lineTo(x+(w/2)*env(y), y);
   ctx.closePath();
-  ctx.fillStyle = metalGrad(ctx,fin,x,w*1.28); ctx.fill();
+  ctx.fillStyle = metalGrad(ctx,x,w*1.3); ctx.fill();
   ctx.save(); ctx.clip();
   for(let k=0;k<2;k++){
     ctx.beginPath();
     for(let y=y0;y<=y1;y+=step){
-      const xx = x + (w*0.52)*env(y)*Math.cos((y-y0)/period*Math.PI*2 + k*Math.PI);
+      const xx = x + (w*0.5)*env(y)*Math.cos((y-y0)/period*Math.PI*2 + k*Math.PI);
       y===y0?ctx.moveTo(xx,y):ctx.lineTo(xx,y);
     }
-    ctx.strokeStyle=fin.edge; ctx.globalAlpha=0.55; ctx.lineWidth=Math.max(1,w*0.13); ctx.stroke();
+    ctx.strokeStyle=FIN.edge; ctx.globalAlpha=0.6; ctx.lineWidth=Math.max(1,w*0.14); ctx.stroke();
   }
   ctx.beginPath();
   for(let y=y0;y<=y1;y+=step){
-    const xx = x + (w*0.30)*Math.cos((y-y0)/period*Math.PI*2 + 1.2);
+    const xx = x + (w*0.3)*Math.cos((y-y0)/period*Math.PI*2 + 1.2);
     y===y0?ctx.moveTo(xx,y):ctx.lineTo(xx,y);
   }
-  ctx.strokeStyle=fin.hi; ctx.globalAlpha=0.5; ctx.lineWidth=Math.max(1,w*0.2); ctx.stroke();
+  ctx.strokeStyle=FIN.hi; ctx.globalAlpha=0.5; ctx.lineWidth=Math.max(1,w*0.2); ctx.stroke();
   ctx.globalAlpha=1; ctx.restore();
-}
-function basketBand(ctx,fin,x,w,y0,y1,ppi){
-  const A=(2.55/2)*ppi, H=y1-y0, sw=Math.max(1.1,0.15*ppi);
-  const strand=(phase)=>{
-    const pts=[];
-    for(let i=0;i<=28;i++){ const u=i/28;
-      pts.push({x:x + A*Math.sin(Math.PI*u)*Math.cos(2*Math.PI*u+phase), y:y0+u*H,
-                z:Math.sin(2*Math.PI*u+phase)*Math.sin(Math.PI*u)});
-    } return pts;
-  };
-  const strands=[0,Math.PI/2,Math.PI,3*Math.PI/2].map(p=>({pts:strand(p)}));
-  for(const pass of [0,1]){
-    for(const s of strands){
-      ctx.beginPath();
-      let started=false;
-      for(const p of s.pts){
-        const front = p.z>=-0.05;
-        if((pass===1)===front){ started?ctx.lineTo(p.x,p.y):(ctx.moveTo(p.x,p.y),started=true); }
-        else if(started){ started=false; }
-      }
-      ctx.strokeStyle = pass? fin.base : fin.dark;
-      ctx.lineWidth = pass? sw : sw*0.9;
-      ctx.globalAlpha = pass?1:0.85;
-      ctx.stroke();
-    }
-  }
-  ctx.globalAlpha=1;
-  const ch=0.42*ppi, cw=w*1.55;
+  // collar caps at band ends
+  const ch=Math.max(2,0.28*ppi), cw=w*1.34;
   for(const yy of [y0,y1]){
-    ctx.fillStyle=metalGrad(ctx,fin,x,cw);
+    ctx.fillStyle=metalGrad(ctx,x,cw);
     ctx.fillRect(x-cw/2, yy-ch/2, cw, ch);
   }
 }
-function knuckleBand(ctx,fin,x,w,y0,y1){
+function knuckleBand(ctx,x,w,y0,y1){
   const H=y1-y0, mw=w*1.62;
   ctx.beginPath();
   ctx.moveTo(x-w/2,y0);
   ctx.lineTo(x-mw/2, y0+H*0.3); ctx.lineTo(x-mw/2, y1-H*0.3); ctx.lineTo(x-w/2,y1);
   ctx.lineTo(x+w/2,y1); ctx.lineTo(x+mw/2, y1-H*0.3); ctx.lineTo(x+mw/2, y0+H*0.3); ctx.lineTo(x+w/2,y0);
   ctx.closePath();
-  ctx.fillStyle=metalGrad(ctx,fin,x,mw*1.05); ctx.fill();
-  ctx.strokeStyle=fin.edge; ctx.globalAlpha=.5; ctx.lineWidth=1;
+  ctx.fillStyle=metalGrad(ctx,x,mw*1.05); ctx.fill();
+  ctx.strokeStyle=FIN.edge; ctx.globalAlpha=.5; ctx.lineWidth=1;
   for(const f of [0.3,0.7]){ ctx.beginPath(); ctx.moveTo(x-mw/2,y0+H*f); ctx.lineTo(x+mw/2,y0+H*f); ctx.stroke(); }
   ctx.globalAlpha=1;
 }
-function ribbonBand(ctx,fin,x,w,y0,y1,ppi){
-  const loops=3, H=y1-y0, R=0.78*ppi, lw=Math.max(1.4,0.24*ppi);
-  for(let i=0;i<loops;i++){
-    const cy=y0+H*(i+0.5)/loops, ry=H/loops*0.52;
-    ctx.beginPath(); ctx.ellipse(x,cy,R,ry,0,Math.PI*0.94,Math.PI*2.06);
-    ctx.strokeStyle=fin.dark; ctx.lineWidth=lw*0.75; ctx.globalAlpha=.8; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(x,cy,R,ry,0,-Math.PI*0.06,Math.PI*1.06);
-    ctx.strokeStyle=fin.base; ctx.lineWidth=lw; ctx.globalAlpha=1; ctx.stroke();
-  }
-}
-function scrollBand(ctx,fin,x,w,y0,y1,ppi){
-  const H=y1-y0, A=1.5*ppi, lw=Math.max(1.2,w*0.8);
-  ctx.beginPath(); ctx.moveTo(x,y0);
-  ctx.bezierCurveTo(x+A, y0+H*0.28, x-A, y1-H*0.28, x, y1);
-  ctx.strokeStyle=fin.base; ctx.lineWidth=lw; ctx.stroke();
-  const curl=(cx,cy,dir)=>{
-    ctx.beginPath();
-    let r=0.72*ppi, a=dir>0?Math.PI:0;
-    ctx.moveTo(cx+r*Math.cos(a), cy+r*Math.sin(a));
-    for(let i=0;i<=40;i++){ const t=i/40, ang=a+dir*t*Math.PI*2.1, rr=r*(1-0.78*t);
-      ctx.lineTo(cx+rr*Math.cos(ang), cy+rr*Math.sin(ang)); }
-    ctx.strokeStyle=fin.base; ctx.lineWidth=Math.max(1,w*0.6); ctx.stroke();
-    ctx.strokeStyle=fin.hi; ctx.globalAlpha=.25; ctx.lineWidth=Math.max(.6,w*0.25); ctx.stroke(); ctx.globalAlpha=1;
-  };
-  curl(x+A*0.72, y0+H*0.3, 1); curl(x-A*0.72, y1-H*0.3, -1);
-}
-function speckle(ctx,fin,x,w,y0,y1,seed,density){
-  const rnd=mulberry(seed), n=Math.round((y1-y0)/6*density);
-  ctx.globalAlpha=.35;
-  for(let i=0;i<n;i++){
-    const yy=y0+rnd()*(y1-y0), xx=x-w/2+rnd()*w;
-    ctx.fillStyle = rnd()>0.5 ? (fin.speckle||fin.hi) : fin.dark;
-    ctx.fillRect(xx,yy,1,1);
-  }
-  ctx.globalAlpha=1;
-}
-function drawBalusterV(ctx,o){
-  const fin=FINISHES[o.finish], H=o.yB-o.yT;
+function drawIronV(ctx,o){
+  // vertical iron baluster: {x, yT, yB, ppi, widthIn, design, shadow?}
+  const H=o.yB-o.yT;
   if (H<6) return;
   const ppi=o.ppi, w=Math.max(o.minW||1.5, o.widthIn*ppi), x=o.x;
   if(o.shadow){
-    // soft ambient band: absorbs the halo where the old wood baluster stood
     const bw=Math.max(w*4.6, 1.9*ppi), off=o.shadow.dir*w*0.5;
     const g0=ctx.createLinearGradient(x+off-bw/2,0,x+off+bw/2,0);
     g0.addColorStop(0,'rgba(12,10,8,0)');
@@ -435,35 +298,26 @@ function drawBalusterV(ctx,o){
     g.addColorStop(0,'rgba(10,8,6,.28)'); g.addColorStop(1,'rgba(10,8,6,0)');
     ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(x,o.yB,w*2.4,w*0.7,0,0,Math.PI*2); ctx.fill();
   }
-  const tiny = w<2.6 || ppi<4.5;
+  const tiny = !o.forceBands && (w<2.6 || ppi<4.5);
   const seg=(cFrac,len)=>{ const c=o.yT+H*cFrac, l=Math.min(len*ppi, H*0.42); return [c-l/2, c+l/2]; };
   const d=tiny?'plain':o.design;
   let bands=[];
-  if(d==='twist'||d==='hammered-twist'){ const[a,b]=seg(0.48,9); bands=[{y0:a,y1:b,fn:'twist'}]; }
-  else if(d==='double-twist'){ const Hin=H/ppi; const[a,b]=seg(0.30,Math.min(7,Hin*0.24)); const[c,e]=seg(0.68,Math.min(7,Hin*0.24)); bands=[{y0:a,y1:b,fn:'twist'},{y0:c,y1:e,fn:'twist'}]; }
-  else if(d==='basket'){ const[a,b]=seg(0.5,5.6); bands=[{y0:a,y1:b,fn:'basket'}]; }
-  else if(d==='double-basket'){ const[a,b]=seg(0.32,5.2); const[c,e]=seg(0.68,5.2); bands=[{y0:a,y1:b,fn:'basket'},{y0:c,y1:e,fn:'basket'}]; }
-  else if(d==='knuckle'){ const[a,b]=seg(0.5,3.1); bands=[{y0:a,y1:b,fn:'knuckle'}]; }
-  else if(d==='double-knuckle'){ const[a,b]=seg(0.36,3.0); const[c,e]=seg(0.64,3.0); bands=[{y0:a,y1:b,fn:'knuckle'},{y0:c,y1:e,fn:'knuckle'}]; }
-  else if(d==='ribbon'){ const[a,b]=seg(0.48,5.4); bands=[{y0:a,y1:b,fn:'ribbon'}]; }
-  else if(d==='double-ribbon'){ const[a,b]=seg(0.31,5.0); const[c,e]=seg(0.67,5.0); bands=[{y0:a,y1:b,fn:'ribbon'},{y0:c,y1:e,fn:'ribbon'}]; }
-  else if(d==='scroll'){ const[a,b]=seg(0.48,13); bands=[{y0:a,y1:b,fn:'scroll'}]; }
+  if(d==='twist'){ const[a,b]=seg(0.46,9); bands=[{y0:a,y1:b,fn:'twist'}]; }
+  else if(d==='double-twist'){ const Hin=H/ppi; const L=Math.min(7,Hin*0.24);
+    const[a,b]=seg(0.28,L); const[c,e]=seg(0.66,L);
+    bands=[{y0:a,y1:b,fn:'twist'},{y0:c,y1:e,fn:'twist'}]; }
+  else if(d==='knuckle'){ const[a,b]=seg(0.48,3.1); bands=[{y0:a,y1:b,fn:'knuckle'}]; }
   bands.sort((p,q)=>p.y0-q.y0);
   let cy=o.yT;
-  for(const b of bands){ if(b.y0>cy) barRect(ctx,fin,x,w,cy,b.y0); cy=b.y1; }
-  if(cy<o.yB) barRect(ctx,fin,x,w,cy,o.yB);
+  for(const b of bands){ if(b.y0>cy) barRect(ctx,x,w,cy,b.y0); cy=b.y1; }
+  if(cy<o.yB) barRect(ctx,x,w,cy,o.yB);
   for(const b of bands){
-    if(b.fn==='twist') twistBand(ctx,fin,x,w,b.y0,b.y1,ppi);
-    else if(b.fn==='basket') basketBand(ctx,fin,x,w,b.y0,b.y1,ppi);
-    else if(b.fn==='knuckle') knuckleBand(ctx,fin,x,w,b.y0,b.y1);
-    else if(b.fn==='ribbon') ribbonBand(ctx,fin,x,w,b.y0,b.y1,ppi);
-    else if(b.fn==='scroll') scrollBand(ctx,fin,x,w,b.y0,b.y1,ppi);
+    if(b.fn==='twist') twistBand(ctx,x,w,b.y0,b.y1,ppi);
+    else if(b.fn==='knuckle') knuckleBand(ctx,x,w,b.y0,b.y1);
   }
-  if(d==='hammered'||d==='hammered-twist') speckle(ctx,fin,x,w*1.15,o.yT,o.yB,o.seed,2.2);
-  if(o.finish==='silver-vein'&&!tiny) speckle(ctx,fin,x,w,o.yT,o.yB,o.seed,1.2);
-  if(o.shoe&&!tiny) drawShoe(ctx,fin,x,o.yB,ppi,w);
+  if(!tiny) drawShoe(ctx,x,o.yB,ppi,w);
 }
-function drawBalusterAxis(ctx,b,cfg,idx,light){
+function drawIronAxis(ctx,b,cfg,idx,light){
   const dx=b.xT-b.xB, dy=b.yT-b.yB;
   const h=Math.hypot(dx,dy);
   if(h<6) return;
@@ -472,71 +326,358 @@ function drawBalusterAxis(ctx,b,cfg,idx,light){
   ctx.save();
   ctx.translate(b.xB,b.yB);
   ctx.rotate(ang);
-  drawBalusterV(ctx,{ x:0, yT:-h, yB:0, ppi,
+  drawIronV(ctx,{ x:0, yT:-h, yB:0, ppi,
     widthIn:cfg.widthIn, design:cfg.pattern[idx % cfg.pattern.length]||'plain',
-    finish:cfg.finish, seed:1234+idx*97, shoe:cfg.shoes,
     shadow: b.inner?null:{dir:light.dir, alpha:light.alpha},
     minW: b.inner?1.2:1.6 });
   ctx.restore();
 }
 
-/* ================= scene drawing ================= */
-function runBalusterPos(run,bal){
-  const x = lerp(run.base[0].x, run.base[1].x, bal.t);
-  const yB = lineY(run.base,x) + bal.dy;
-  const yT = lineY(run.top,x);
-  return {x, yB, yT, h: yB-yT};
-}
-function ppiAt(h){
-  if (S.calib && S.calib.hRef>4) return S.calib.ppi * (h/S.calib.hRef);
-  return h / S.cfg.railH;
-}
-function eachRunBaluster(fn){ let g=0; for(const run of S.runs) run.bals.forEach((b,i)=>fn(run,b,i,g++)); }
-function drawOverlayInto(ctx,cfg){
-  if(S.balusters){
-    let mainIdx=0, innerIdx=0;
-    for(const b of S.balusters) if(b.inner) drawBalusterAxis(ctx,b,cfg,innerIdx++,S.light);
-    for(const b of S.balusters) if(!b.inner) drawBalusterAxis(ctx,b,cfg,mainIdx++,S.light);
-    if(S.occluders && S.plate){
-      ctx.save(); ctx.beginPath();
-      for(const pl of S.occluders){ pl.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath(); }
-      ctx.clip(); ctx.drawImage(S.plate,0,0); ctx.restore();
+/* ================= the drawn close-up scene ================= */
+function buildCloseup(){
+  const ppi=26;
+  const rise=7.5*ppi, run=10.5*ppi, noseD=1.15*ppi, capH=1.35*ppi;
+  const balH=34*ppi;
+  const nT=4;
+  const x0=118;
+  // canvas sized from the geometry: highest baluster top + margin, floor strip below tread 0
+  const topMargin=36, floorStrip=180;
+  const cap0=Math.round(balH + (nT-1)*rise + 8.2*ppi*(rise/run) + topMargin);
+  const W=Math.round(x0*2 + nT*run + noseD + 60), H=Math.round(cap0 + rise + floorStrip);
+  const treads=[];
+  for(let k=0;k<nT;k++) treads.push({x:x0+k*run, top:cap0-k*rise});
+  const rnd=mulberry(777);
+  const yAt = xx => cap0 - balH - (xx-treads[0].x)*(rise/run);
+
+  const paintBase = (x) => {
+    // ----- wall: calm two-tone with barely-there texture -----
+    let g=x.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#ddd3c3'); g.addColorStop(0.6,'#d2c7b5'); g.addColorStop(1,'#c6bAA7'.toLowerCase());
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+    for(let i=0;i<90;i++){
+      const mx=rnd()*W, my=rnd()*H, r=140+rnd()*260;
+      const mg=x.createRadialGradient(mx,my,0,mx,my,r);
+      mg.addColorStop(0,`rgba(${rnd()>0.5?252:120},${rnd()>0.5?246:108},${rnd()>0.5?232:92},${0.008+rnd()*0.012})`);
+      mg.addColorStop(1,'rgba(0,0,0,0)');
+      x.fillStyle=mg; x.beginPath(); x.arc(mx,my,r,0,7); x.fill();
     }
-  } else {
-    let g=0;
-    for(const run of S.runs){
-      run.bals.forEach((bal)=>{
-        const p=runBalusterPos(run,bal);
-        if(p.h<8){g++;return;}
-        const b={xT:p.x,yT:p.yT,xB:p.x,yB:p.yB,len:0};
-        // uploads: derive true length from calibration if set
-        b.len = S.calib&&S.calib.hRef>4 ? p.h/(S.calib.ppi*(p.h/S.calib.hRef)) : S.cfg.railH;
-        drawBalusterAxis(ctx,b,cfg,g,S.light);
-        g++;
-      });
+    // window light from upper-left
+    g=x.createLinearGradient(0,0,W,H*0.8);
+    g.addColorStop(0,'rgba(255,251,238,.12)'); g.addColorStop(0.45,'rgba(255,251,238,0)');
+    g.addColorStop(1,'rgba(58,44,30,.09)');
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+
+    // soft wall shadow band under/parallel to the rail (depth cue)
+    const railTh=2.9*ppi;
+    x.save();
+    x.beginPath();
+    x.moveTo(-50, yAt(-50)+railTh*1.1); x.lineTo(W+50, yAt(W+50)+railTh*1.1);
+    x.lineTo(W+50, yAt(W+50)+railTh*2.6); x.lineTo(-50, yAt(-50)+railTh*2.6);
+    x.closePath();
+    const shg=x.createLinearGradient(0, yAt(W/2)+railTh*1.1, 0, yAt(W/2)+railTh*2.6);
+    shg.addColorStop(0,'rgba(70,55,38,.10)'); shg.addColorStop(1,'rgba(70,55,38,0)');
+    x.fillStyle=shg; x.fill();
+    x.restore();
+
+    // ----- skirt: white board following the steps, clean diagonal bottom edge -----
+    const sD=11.5*ppi; // skirt depth below nosings
+    const skTopPts=[];
+    for(const t of treads){ skTopPts.push([t.x-noseD, t.top]); skTopPts.push([t.x+run, t.top]); }
+    x.beginPath();
+    x.moveTo(treads[0].x-noseD, treads[0].top+rise+capH);      // start below first nosing (floor level-ish)
+    x.lineTo(treads[0].x-noseD, treads[0].top);
+    for(let k=0;k<nT;k++){
+      const t=treads[k];
+      x.lineTo(t.x+run, t.top);                                 // along tread (behind cap)
+      if(k<nT-1) x.lineTo(t.x+run, t.top-rise);                 // up the riser
+      else { x.lineTo(t.x+run+noseD+120, t.top); }              // run off right edge
+    }
+    const bx1=treads[nT-1].x+run+noseD+120;
+    x.lineTo(bx1, treads[nT-1].top + sD);
+    x.lineTo(treads[0].x-noseD + sD*(run/rise)*0 + 0, treads[0].top+rise+capH + 0); // back to start via diagonal
+    x.closePath();
+    let sg=x.createLinearGradient(0,cap0-360,0,cap0+sD);
+    sg.addColorStop(0,'#f4f0e8'); sg.addColorStop(0.7,'#e9e4d8'); sg.addColorStop(1,'#d8d1c1');
+    x.fillStyle=sg; x.fill();
+    // skirt bottom edge line + wall shadow under it
+    x.strokeStyle='rgba(125,110,88,.4)'; x.lineWidth=2.5;
+    x.beginPath();
+    x.moveTo(treads[0].x-noseD, treads[0].top+rise+capH);
+    x.lineTo(bx1, treads[nT-1].top+sD);
+    x.stroke();
+    const eg=x.createLinearGradient(0,0,0,60);
+    x.save();
+    x.beginPath();
+    x.moveTo(treads[0].x-noseD, treads[0].top+rise+capH);
+    x.lineTo(bx1, treads[nT-1].top+sD);
+    x.lineTo(bx1, treads[nT-1].top+sD+55);
+    x.lineTo(treads[0].x-noseD, treads[0].top+rise+capH+55);
+    x.closePath();
+    const dg=x.createLinearGradient(0,cap0+sD*0.4,0,cap0+sD*0.4+70);
+    dg.addColorStop(0,'rgba(75,60,42,.14)'); dg.addColorStop(1,'rgba(75,60,42,0)');
+    x.fillStyle=dg; x.fill();
+    x.restore();
+
+    // ----- per-step: riser shading, nosing shadow, oak cap, carpet -----
+    for(let k=0;k<nT;k++){
+      const t=treads[k];
+      // riser face shading (inside skirt, below this cap back to next lower tread)
+      const rg2=x.createLinearGradient(t.x-noseD,0,t.x+run*0.4,0);
+      rg2.addColorStop(0,'rgba(150,135,110,.22)'); rg2.addColorStop(1,'rgba(150,135,110,0)');
+      x.fillStyle=rg2;
+      x.fillRect(t.x-noseD, t.top+capH, run*0.4, rise-capH+2);
+      // shadow under the cap nosing
+      const ng=x.createLinearGradient(0,t.top+capH,0,t.top+capH+26);
+      ng.addColorStop(0,'rgba(60,45,30,.28)'); ng.addColorStop(1,'rgba(60,45,30,0)');
+      x.fillStyle=ng;
+      x.fillRect(t.x-noseD, t.top+capH, run+noseD, 26);
+
+      // carpet: covers the tread depth, rolls over the nose (drawn before cap so cap sits in front at the end)
+      const chH=1.3*ppi;
+      x.save();
+      x.beginPath();
+      x.moveTo(t.x-noseD*0.55, t.top+capH*0.35);
+      x.quadraticCurveTo(t.x-noseD*0.8, t.top-chH, t.x+34, t.top-chH);
+      x.lineTo(t.x+run-6, t.top-chH);
+      x.quadraticCurveTo(t.x+run+4, t.top-chH, t.x+run+4, t.top-chH*0.3);
+      x.lineTo(t.x+run+4, t.top+2);
+      x.lineTo(t.x-noseD*0.55, t.top+2);
+      x.closePath();
+      let cg=x.createLinearGradient(0,t.top-chH,0,t.top+capH*0.4);
+      cg.addColorStop(0,'#cbbba6'); cg.addColorStop(0.55,'#b7a58e'); cg.addColorStop(1,'#9c8a72');
+      x.fillStyle=cg; x.fill();
+      x.clip();
+      for(let i=0;i<900;i++){
+        x.fillStyle=`rgba(${rnd()>0.5?240:130},${rnd()>0.5?228:112},${rnd()>0.5?206:88},${0.05+rnd()*0.08})`;
+        x.fillRect(t.x-noseD+rnd()*(run+noseD+8), t.top-chH+rnd()*(chH+capH*0.4), 1.7, 1.7);
+      }
+      // carpet top sheen
+      x.fillStyle='rgba(255,248,232,.15)';
+      x.fillRect(t.x-noseD*0.6, t.top-chH, run+noseD, 4);
+      x.restore();
+
+      // oak side cap (end return) with bullnose, in front of carpet
+      x.save();
+      x.beginPath();
+      x.moveTo(t.x-noseD, t.top+capH*0.55);
+      x.quadraticCurveTo(t.x-noseD, t.top-2, t.x-noseD*0.25, t.top-2);
+      x.lineTo(t.x+run, t.top-2);
+      x.lineTo(t.x+run, t.top+capH);
+      x.lineTo(t.x-noseD*0.25, t.top+capH);
+      x.quadraticCurveTo(t.x-noseD, t.top+capH, t.x-noseD, t.top+capH*0.55);
+      x.closePath();
+      let og=x.createLinearGradient(0,t.top-2,0,t.top+capH);
+      og.addColorStop(0,'#c99a60'); og.addColorStop(0.35,'#ab7c48'); og.addColorStop(1,'#7e5730');
+      x.fillStyle=og; x.fill();
+      x.clip(); // grain stays inside the cap
+      x.strokeStyle='rgba(88,54,24,.28)'; x.lineWidth=1.2;
+      for(let i=0;i<4;i++){
+        const gy=t.top+2+(capH-6)*(i+0.5)/4+(rnd()-0.5)*3;
+        x.beginPath();
+        for(let gx=t.x-noseD; gx<t.x+run; gx+=54){
+          gx<=t.x-noseD? x.moveTo(gx,gy) : x.lineTo(gx, gy+(rnd()-0.5)*2.4);
+        }
+        x.stroke();
+      }
+      x.fillStyle='rgba(255,240,214,.4)'; x.fillRect(t.x-noseD*0.3, t.top-2, run, 3);
+      x.fillStyle='rgba(45,28,12,.32)'; x.fillRect(t.x-noseD, t.top+capH-3, run+noseD, 3);
+      x.restore();
+    }
+
+    // ----- floor at the base (grounds the composition) -----
+    const fy=treads[0].top+rise;
+    let fg=x.createLinearGradient(0,fy,0,H);
+    fg.addColorStop(0,'#a8825a'); fg.addColorStop(0.25,'#96714a'); fg.addColorStop(1,'#7c5a38');
+    x.save();
+    x.beginPath();
+    x.moveTo(0,fy+capH); x.lineTo(treads[0].x-noseD+2, fy+capH);
+    x.lineTo(treads[0].x-noseD+2+(H-fy)*(run/rise)*0.0, H); x.lineTo(0,H);
+    x.closePath();
+    x.fillStyle=fg; x.fill();
+    // plank seams
+    x.strokeStyle='rgba(70,48,26,.4)'; x.lineWidth=2;
+    for(let i=1;i<6;i++){
+      const py=fy+capH+ i*(H-fy-capH)/6 + (rnd()-0.5)*6;
+      x.beginPath(); x.moveTo(0,py); x.lineTo(treads[0].x-noseD+2,py+14); x.stroke();
+    }
+    x.restore();
+    // white base of skirt meeting floor
+    x.fillStyle='#eee9de';
+    x.fillRect(0, fy, treads[0].x-noseD+2, capH);
+    x.fillStyle='rgba(60,45,30,.18)';
+    x.fillRect(0, fy+capH, treads[0].x-noseD+2, 8);
+
+    // ----- handrail along the rake -----
+    const rx0=-260, rx1=W+260;
+    const railPath=(off,color,widthF)=>{
+      x.strokeStyle=color; x.lineWidth=railTh*widthF;
+      x.beginPath();
+      x.moveTo(rx0, yAt(rx0)-railTh*0.5+off);
+      x.lineTo(rx1, yAt(rx1)-railTh*0.5+off);
+      x.stroke();
+    };
+    // shadow under rail cast onto balusters zone kept subtle
+    railPath(railTh*0.62,'rgba(60,45,30,.13)',0.3);
+    railPath(0,'#684623',1.0);
+    railPath(-railTh*0.14,'#8f6236',0.66);
+    railPath(-railTh*0.30,'#b88a50',0.3);
+    railPath(-railTh*0.40,'#d8ab6c',0.12);
+    // rail grain
+    x.strokeStyle='rgba(64,38,16,.34)'; x.lineWidth=1.4;
+    for(let i=0;i<5;i++){
+      const off=-railTh*0.42+ i*railTh*0.2 + (rnd()-0.5)*2;
+      x.beginPath();
+      for(let gx=rx0; gx<rx1; gx+=64){
+        const gy=yAt(gx)-railTh*0.5+off+(rnd()-0.5)*2.2;
+        gx<=rx0?x.moveTo(gx,gy):x.lineTo(gx,gy);
+      }
+      x.stroke();
+    }
+    // rail bottom edge line
+    x.strokeStyle='rgba(40,24,10,.5)'; x.lineWidth=2;
+    x.beginPath(); x.moveTo(rx0,yAt(rx0)+1); x.lineTo(rx1,yAt(rx1)+1); x.stroke();
+
+    // gentle vignette
+    g=x.createRadialGradient(W/2,H*0.42,H*0.4,W/2,H*0.52,H*1.02);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(48,36,22,.14)');
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+  };
+
+  const plate=mk(W,H);
+  paintBase(plate.getContext('2d'));
+
+  // baluster geometry: two per tread at 2.6" and 7.9" from the riser face
+  const balusters=[];
+  for(let k=0;k<nT;k++){
+    const t=treads[k];
+    for(const off of [2.6*ppi, 7.9*ppi]){
+      const bx=t.x+off;
+      const yT=yAt(bx)+2, yB=t.top+1;
+      balusters.push({xT:bx, yT, xB:bx, yB, len:+((yB-yT)/ppi).toFixed(2)});
     }
   }
+
+  // BEFORE: same base + today's white wood balusters (tapered, 1.25" boot)
+  const before=mk(W,H);
+  const bx2=before.getContext('2d');
+  bx2.drawImage(plate,0,0);
+  for(const b of balusters) drawWoodV(bx2, b.xB, b.yT, b.yB, ppi);
+
+  return {plate, before, balusters, occluders:[], light:{dir:1, alpha:0.12}};
 }
-function cfgKey(cfg){ return [cfg.widthIn,cfg.finish,cfg.pattern.join(','),cfg.shoes,S.sceneId,S.isUpload,S.runs.length,S.runs.map(r=>r.bals.length+':'+r.bals.map(b=>b.t.toFixed(3)).join(',')).join('.')].join('|'); }
+function drawWoodV(x, cx, yT, yB, ppi){
+  // tapered painted-white spindle: 1.25" square boot, turned rings, shaft 1.05"->0.62"
+  const H=yB-yT;
+  const bootW=1.25*ppi, bootH=6.2*ppi;
+  const w=(f)=>lerp(1.02,0.62,f)*ppi; // shaft width by fraction of shaft height
+  // soft cast shadow
+  x.fillStyle='rgba(50,40,28,.13)';
+  x.fillRect(cx+bootW*0.5, yT+6, bootW*0.6, H-8);
+  const shade=(px,wd,y0,y1)=>{
+    const g=x.createLinearGradient(px-wd/2,0,px+wd/2,0);
+    g.addColorStop(0,'#b7b2a6'); g.addColorStop(0.28,'#f2efe8'); g.addColorStop(0.62,'#e8e4da'); g.addColorStop(1,'#a9a496');
+    x.fillStyle=g; return g;
+  };
+  // boot
+  shade(cx,bootW); x.fillRect(cx-bootW/2, yB-bootH, bootW, bootH);
+  // shaft: tapered, drawn as trapezoid strips
+  const shTop=yT, shBot=yB-bootH-0.7*ppi;
+  const steps=24;
+  for(let i=0;i<steps;i++){
+    const f0=i/steps, f1=(i+1)/steps;
+    const y0=lerp(shTop,shBot,f0), y1=lerp(shTop,shBot,f1);
+    const w0=w(f0), w1=w(f1);
+    shade(cx,(w0+w1)/2);
+    x.beginPath();
+    x.moveTo(cx-w0/2,y0); x.lineTo(cx+w0/2,y0);
+    x.lineTo(cx+w1/2,y1); x.lineTo(cx-w1/2,y1);
+    x.closePath(); x.fill();
+  }
+  // turned rings between shaft and boot
+  const ry=yB-bootH-0.35*ppi;
+  shade(cx,1.3*ppi);
+  x.beginPath(); x.ellipse(cx,ry,0.62*ppi,0.34*ppi,0,0,7); x.fill();
+  x.beginPath(); x.ellipse(cx,ry-0.5*ppi,0.5*ppi,0.22*ppi,0,0,7); x.fill();
+  x.fillStyle='rgba(90,85,70,.25)';
+  x.beginPath(); x.ellipse(cx,ry+0.28*ppi,0.55*ppi,0.12*ppi,0,0,7); x.fill();
+  // boot top edge shade
+  x.fillStyle='rgba(90,85,70,.3)'; x.fillRect(cx-bootW/2, yB-bootH, bootW, 2);
+}
+
+/* ================= scenes ================= */
+const SCENE_DEFS = [
+  {id:'closeup', name:'Close-up (drawn)'},
+  {id:'landing', name:'Landing (photo)'}
+];
+function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
+async function sceneAsset(id, kind){
+  if(window.EMBEDDED_SCENES && EMBEDDED_SCENES[id]) return EMBEDDED_SCENES[id][kind];
+  const bust='?t='+Date.now();
+  if(kind==='geo') return fetch(`scenes/${id}.json`+bust).then(r=>r.json());
+  return `scenes/${id}${kind==='before'?'_before':''}.jpg`+bust;
+}
+async function setScene(id){
+  setHint('');
+  if(id==='closeup'){
+    if(!S.closeupCache) S.closeupCache=buildCloseup();
+    const c=S.closeupCache;
+    S.plate=c.plate; S.before=c.before; S.balusters=c.balusters;
+    S.occluders=[]; S.light=c.light; S.sceneId='closeup';
+  } else {
+    try{
+      const [plateSrc, beforeSrc, geo] = await Promise.all([sceneAsset(id,'plate'), sceneAsset(id,'before'), sceneAsset(id,'geo')]);
+      const geoData = typeof geo==='string' ? JSON.parse(geo) : geo;
+      const [plateImg, beforeImg] = await Promise.all([loadImg(plateSrc), loadImg(beforeSrc).catch(()=>null)]);
+      const c=mk(geoData.w, geoData.h);
+      c.getContext('2d').drawImage(plateImg,0,0,geoData.w,geoData.h);
+      S.plate=c; S.before=beforeImg;
+      S.balusters=geoData.balusters; S.occluders=geoData.occluders||[];
+      S.light={dir:1,alpha:0.11}; S.sceneId=id;
+    }catch(e){ setHint('Could not load that scene.'); return; }
+  }
+  S.split=null; $('beforeBtn').classList.remove('on');
+  markScenes(); fitView(); updateCost(); invalidate(true); saveSoon();
+  setHint(id==='closeup' ? 'A drawn close-up of your staircase — designs read clearly here. Zoom in!'
+                         : 'Your upstairs landing, real photo. Swipe Before/after to compare with today.');
+}
+function markScenes(){
+  document.querySelectorAll('#scenes .chip').forEach(c=>c.classList.toggle('on', c.dataset.id===S.sceneId));
+}
+function buildScenes(){
+  const el=$('scenes'); el.innerHTML='';
+  for(const s of SCENE_DEFS){
+    const b=document.createElement('button'); b.className='chip'; b.textContent=s.name; b.dataset.id=s.id;
+    b.onclick=()=>setScene(s.id);
+    el.appendChild(b);
+  }
+}
+
+/* ================= rendering ================= */
+function drawOverlayInto(ctx,cfg){
+  if(!S.balusters) return;
+  let mainIdx=0, innerIdx=0;
+  for(const b of S.balusters) if(b.inner) drawIronAxis(ctx,b,cfg,innerIdx++,S.light);
+  for(const b of S.balusters) if(!b.inner) drawIronAxis(ctx,b,cfg,mainIdx++,S.light);
+  if(S.occluders && S.occluders.length && S.plate){
+    ctx.save(); ctx.beginPath();
+    for(const pl of S.occluders){ pl.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath(); }
+    ctx.clip(); ctx.drawImage(S.plate,0,0); ctx.restore();
+  }
+}
+function cfgKey(cfg){ return [cfg.widthIn,cfg.pattern.join(','),S.sceneId].join('|'); }
 function getOverlay(cfg){
   const key=cfgKey(cfg);
   if(S.overlay && S.overlayFor===key) return S.overlay;
   if(!S.plate) return null;
-  const c=document.createElement('canvas'); c.width=S.plate.width; c.height=S.plate.height;
-  const x=c.getContext('2d');
-  drawOverlayInto(x,cfg);
+  const c=mk(S.plate.width,S.plate.height);
+  drawOverlayInto(c.getContext('2d'),cfg);
   S.overlay=c; S.overlayFor=key;
   return c;
 }
 function drawScene(ctx,cfg){
   if(S.plate) ctx.drawImage(S.plate,0,0);
   if(cfg===S.cfg){ const ov=getOverlay(cfg); if(ov) ctx.drawImage(ov,0,0); }
-  else { drawOverlayInto(ctx,cfg); }
-}
-function drawSceneLook(i){
-  const lk=S.looks[i];
-  if(S.plate) vctx.drawImage(S.plate,0,0);
-  drawOverlayInto(vctx, lk?{...S.cfg,...lk.cfg}:S.cfg);
+  else drawOverlayInto(ctx,cfg);
 }
 function render(){
   if(!S.dirty) return; S.dirty=false;
@@ -552,12 +693,12 @@ function render(){
     const dx=S.split.x*W;
     vctx.save(); vctx.beginPath(); vctx.rect(0,0,dx,Hh); vctx.clip(); applyView();
     if(S.split.mode==='before'){ if(S.before) vctx.drawImage(S.before,0,0,S.plate.width,S.plate.height); else drawScene(vctx,S.cfg); }
-    else drawSceneLook(S.split.a);
+    else { if(S.plate) vctx.drawImage(S.plate,0,0); drawOverlayInto(vctx, {...S.cfg, ...(S.looks[S.split.a]?.cfg||{})}); }
     vctx.restore();
     vctx.setTransform(DPR,0,0,DPR,0,0);
     vctx.save(); vctx.beginPath(); vctx.rect(dx,0,W-dx,Hh); vctx.clip(); applyView();
     if(S.split.mode==='before') drawScene(vctx,S.cfg);
-    else drawSceneLook(S.split.b);
+    else { if(S.plate) vctx.drawImage(S.plate,0,0); drawOverlayInto(vctx, {...S.cfg, ...(S.looks[S.split.b]?.cfg||{})}); }
     vctx.restore();
     vctx.setTransform(DPR,0,0,DPR,0,0);
     vctx.fillStyle='#fff'; vctx.fillRect(dx-1,0,2,Hh);
@@ -573,167 +714,10 @@ function render(){
     else { lab(S.looks[S.split.a]?.name||'A', 12,'l'); lab(S.looks[S.split.b]?.name||'B', W-12,'r'); }
   } else {
     applyView(); drawScene(vctx,S.cfg);
-    drawGuides();
-  }
-}
-function drawGuides(){
-  if(!S.isUpload) return;
-  const s=S.view.s;
-  if(S.tool==='adjust'){
-    for(const run of S.runs){
-      vctx.strokeStyle='rgba(120,200,255,.5)'; vctx.lineWidth=1/s;
-      vctx.beginPath(); vctx.moveTo(run.top[0].x,run.top[0].y); vctx.lineTo(run.top[1].x,run.top[1].y); vctx.stroke();
-      vctx.beginPath(); vctx.moveTo(run.base[0].x,run.base[0].y); vctx.lineTo(run.base[1].x,run.base[1].y); vctx.stroke();
-      for(const p of [...run.top,...run.base]){
-        vctx.fillStyle='#fff'; vctx.strokeStyle='#2a6ea8'; vctx.lineWidth=1.5/s;
-        vctx.beginPath(); vctx.arc(p.x,p.y,6/s,0,7); vctx.fill(); vctx.stroke();
-      }
-      for(const b of run.bals){
-        const p=runBalusterPos(run,b), r=5/s;
-        vctx.fillStyle='rgba(255,255,255,.92)'; vctx.strokeStyle='#2a6ea8'; vctx.lineWidth=1.2/s;
-        vctx.beginPath(); vctx.moveTo(p.x,p.yB+3/s); vctx.lineTo(p.x+r,p.yB+3/s+r);
-        vctx.lineTo(p.x,p.yB+3/s+2*r); vctx.lineTo(p.x-r,p.yB+3/s+r); vctx.closePath();
-        vctx.fill(); vctx.stroke();
-      }
-    }
-  }
-  if(S.runClicks.length){
-    vctx.fillStyle='#7fc8ff';
-    for(const p of S.runClicks){ vctx.beginPath(); vctx.arc(p.x,p.y,5/S.view.s,0,7); vctx.fill(); }
-  }
-  if(S.marquee){
-    const m=S.marquee;
-    vctx.strokeStyle='#ff9d5c'; vctx.lineWidth=1.5/S.view.s; vctx.setLineDash([6/S.view.s,4/S.view.s]);
-    vctx.strokeRect(Math.min(m.x0,m.x1),Math.min(m.y0,m.y1),Math.abs(m.x1-m.x0),Math.abs(m.y1-m.y0));
-    vctx.setLineDash([]);
-  }
-  if(S.calibLine){
-    const c=S.calibLine;
-    vctx.strokeStyle='#ffd75c'; vctx.lineWidth=2/S.view.s;
-    vctx.beginPath(); vctx.moveTo(c.x0,c.y0); vctx.lineTo(c.x1,c.y1); vctx.stroke();
   }
 }
 function invalidate(recomposite){ if(recomposite) S.overlayFor=null; S.dirty=true; }
 setInterval(()=>{ if(S.dirty) render(); },16);
-
-/* ================= scenes ================= */
-async function sceneAsset(id, kind){
-  if(window.EMBEDDED_SCENES && EMBEDDED_SCENES[id]) return EMBEDDED_SCENES[id][kind];
-  const bust='?t='+Date.now();
-  if(kind==='geo') return fetch(`scenes/${id}.json`+bust).then(r=>r.json());
-  return `scenes/${id}${kind==='before'?'_before':''}.jpg`+bust;
-}
-function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
-async function setScene(id){
-  const def=SCENE_DEFS.find(s=>s.id===id);
-  if(!def) return;
-  setHint('Loading…');
-  try{
-    const [plateSrc, beforeSrc, geo] = await Promise.all([sceneAsset(id,'plate'), sceneAsset(id,'before'), sceneAsset(id,'geo')]);
-    const geoData = typeof geo==='string' ? JSON.parse(geo) : geo;
-    const [plateImg, beforeImg] = await Promise.all([loadImg(plateSrc), loadImg(beforeSrc).catch(()=>null)]);
-    const c=document.createElement('canvas'); c.width=geoData.w; c.height=geoData.h;
-    const x=c.getContext('2d'); x.drawImage(plateImg,0,0,geoData.w,geoData.h);
-    S.plate=c; S.plateCtx=x; S.before=beforeImg;
-    S.balusters=geoData.balusters; S.occluders=geoData.occluders||[];
-    S.light=def.light; S.sceneId=id; S.isUpload=false; S.runs=[]; S.split=null;
-    $('beforeBtn').classList.remove('on');
-    $('uploadtools').classList.remove('show');
-    markScenes(); fitView(); updateCost(); invalidate(true); saveSoon();
-    setHint(id==='foyer' ? 'Your foyer, with iron in place of the white wood. Try widths and designs — or hit Before/after up top.' :
-            'Scroll to zoom in and inspect the detail up close.');
-  }catch(e){
-    setHint('Could not load that scene ('+e+')');
-  }
-}
-function markScenes(){
-  document.querySelectorAll('#scenes .chip').forEach(c=>c.classList.toggle('on', c.dataset.id===S.sceneId));
-}
-function buildScenes(){
-  const el=$('scenes'); el.innerHTML='';
-  for(const s of SCENE_DEFS){
-    const b=document.createElement('button'); b.className='chip'; b.textContent=s.name; b.dataset.id=s.id;
-    b.onclick=()=>setScene(s.id);
-    el.appendChild(b);
-  }
-}
-
-/* ================= upload flow ================= */
-function autoFill(run,n){ run.bals = Array.from({length:n},(_,i)=>({t:(i+0.5)/n, dy:0})); }
-function defaultCount(run){
-  const mid=runBalusterPos(run,{t:0.5,dy:0});
-  const ppi=ppiAt(Math.max(8,mid.h));
-  const Lpx=Math.hypot(run.base[1].x-run.base[0].x, run.base[1].y-run.base[0].y);
-  return clamp(Math.round(Lpx/ppi/5.3), 2, 60);
-}
-function loadPhotoFile(file){
-  const url=URL.createObjectURL(file);
-  const img=new Image();
-  img.onload=()=>{
-    URL.revokeObjectURL(url);
-    const maxSide=2200, sc=Math.min(1, maxSide/Math.max(img.width,img.height));
-    const c=document.createElement('canvas');
-    c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc);
-    const x=c.getContext('2d'); x.drawImage(img,0,0,c.width,c.height);
-    S.plate=c; S.plateCtx=x; S.before=null; S.balusters=null; S.occluders=null;
-    S.sceneId=null; S.isUpload=true;
-    S.runs=[]; S.undoStack.length=0; S.calib=null; S.split=null;
-    S.light={dir:-1,alpha:0.13};
-    $('uploadtools').classList.add('show');
-    markScenes(); fitView(); setTool('run');
-    setHint('Photo loaded — mark the run: click the rail above the first baluster, the rail above the last, then the base of the first and last.');
-    invalidate(true);
-  };
-  img.onerror=()=>{ setHint('That image would not load — try a screenshot of the photo instead.'); };
-  img.src=url;
-}
-function inpaintRect(x0,y0,w,h){
-  if(!S.plate||!S.isUpload) return;
-  const ctx=S.plateCtx, PW=S.plate.width, PH=S.plate.height;
-  x0=Math.round(clamp(x0,4,PW-5)); y0=Math.round(clamp(y0,0,PH-1));
-  w=Math.round(Math.min(w,PW-5-x0)); h=Math.round(Math.min(h,PH-1-y0));
-  if(w<2||h<2) return;
-  const before=ctx.getImageData(x0,y0,w,h);
-  S.undoStack.push({x:x0,y:y0,img:before});
-  if(S.undoStack.length>60) S.undoStack.shift();
-  const band=ctx.getImageData(0,y0,PW,h), d=band.data;
-  const rnd=mulberry(x0*7919+y0);
-  for(let r=0;r<h;r++){
-    const n=w;
-    for(let x=x0;x<x0+w;x++){
-      const k=x-x0;
-      const lx=Math.max(0,x0-1-k), rx=Math.min(PW-1,x0+w+(n-1-k));
-      const li=(r*PW+lx)*4, ri=(r*PW+rx)*4, i=(r*PW+x)*4;
-      let tt=(k+0.5)/n; tt=clamp((tt-0.35)/0.3,0,1);
-      const nz=(rnd()-0.5)*6;
-      d[i]  =clamp(lerp(d[li],d[ri],tt)+nz,0,255);
-      d[i+1]=clamp(lerp(d[li+1],d[ri+1],tt)+nz,0,255);
-      d[i+2]=clamp(lerp(d[li+2],d[ri+2],tt)+nz,0,255);
-    }
-  }
-  const sm=new Uint8ClampedArray(d);
-  for(let r=1;r<h-1;r++)for(let x=x0;x<x0+w;x++)for(let k=0;k<3;k++){
-    const i=(r*PW+x)*4+k;
-    d[i]=(sm[i-PW*4]+2*sm[i]+sm[i+PW*4])>>2;
-  }
-  ctx.putImageData(band,0,y0);
-  invalidate(true);
-}
-function autoErase(){
-  if(!S.isUpload){ setHint('Auto-erase applies to your own uploaded photos — the built-in scenes are already erased.'); return; }
-  if(!S.runs.length){ setHint('Mark a run first so I know where the balusters are.'); return; }
-  const wIn=parseFloat($('eraseW').value)||2.2;
-  eachRunBaluster((run,bal)=>{
-    const p=runBalusterPos(run,bal); if(p.h<8) return;
-    const ppi=ppiAt(p.h), w=wIn*ppi;
-    inpaintRect(p.x-w/2, p.yT-0.4*ppi, w, p.h+1.3*ppi);
-  });
-  setHint('Old balusters wiped. Leftovers: pick the Erase tool and drag a box over them.');
-}
-function undoErase(){
-  const u=S.undoStack.pop();
-  if(u&&S.plateCtx){ S.plateCtx.putImageData(u.img,u.x,u.y); invalidate(true); }
-}
 
 /* ================= view / interaction ================= */
 function resizeCanvas(){
@@ -744,28 +728,12 @@ function resizeCanvas(){
 function fitView(){
   if(!S.plate) return;
   const W=view.width/DPR, Hh=view.height/DPR;
-  const s=Math.min(W/S.plate.width, Hh/S.plate.height)*0.98;
+  const s=Math.min(W/S.plate.width, Hh/S.plate.height)*0.985;
   S.view={s, tx:(W-S.plate.width*s)/2, ty:(Hh-S.plate.height*s)/2};
   updateZoomLbl(); invalidate();
 }
-function worldPt(e){
-  const r=view.getBoundingClientRect();
-  const sx=e.clientX-r.left, sy=e.clientY-r.top;
-  return {x:(sx-S.view.tx)/S.view.s, y:(sy-S.view.ty)/S.view.s, sx, sy};
-}
 function updateZoomLbl(){ $('zoomlbl').textContent=Math.round(S.view.s*100)+'%'; }
 function setHint(t){ $('hint').textContent=t; $('hint').style.display=t?'block':'none'; }
-const HINTS={
-  adjust:'Drag to pan · scroll or pinch to zoom.',
-  run:'Click 1: rail above the FIRST baluster · 2: rail above the LAST · 3: base of the first · 4: base of the last.',
-  erase:'Drag a box over an old baluster to wipe it out (your own photos).',
-  calib:'Zoom in, then drag a short line straight across ONE existing baluster, edge to edge.'
-};
-function setTool(t){
-  S.tool=t; S.runClicks=[];
-  document.querySelectorAll('#toolbar [data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
-  setHint(HINTS[t]||''); invalidate();
-}
 let pointers=new Map(), pinch=null;
 view.addEventListener('pointerdown',e=>{
   view.setPointerCapture(e.pointerId);
@@ -776,44 +744,10 @@ view.addEventListener('pointerdown',e=>{
            cx:(a.clientX+b.clientX)/2, cy:(a.clientY+b.clientY)/2, tx:S.view.tx, ty:S.view.ty};
     S.drag=null; return;
   }
-  const p=worldPt(e);
-  if(S.split){
-    const W=view.width/DPR;
-    if(Math.abs(p.sx-S.split.x*W)<30){ S.drag={type:'divider'}; return; }
-    S.drag={type:'pan', sx:p.sx, sy:p.sy, tx:S.view.tx, ty:S.view.ty}; return;
-  }
-  if(S.tool==='run'&&S.isUpload){
-    S.runClicks.push({x:p.x,y:p.y});
-    if(S.runClicks.length===1) setHint('Now click the rail above the LAST baluster.');
-    if(S.runClicks.length===2) setHint('Now click the BASE of the first baluster.');
-    if(S.runClicks.length===3) setHint('Now click the BASE of the last baluster.');
-    if(S.runClicks.length===4){
-      const [t1,t2,b1,b2]=S.runClicks;
-      const runObj={top:[t1,t2], base:[b1,b2], bals:[]};
-      autoFill(runObj, defaultCount(runObj));
-      S.runs.push(runObj); S.runClicks=[];
-      refreshRuns(); setTool('adjust');
-      setHint('Run added — drag ◆ markers onto your existing spindles, adjust the count, then Auto-erase.');
-    }
-    invalidate(true); return;
-  }
-  if(S.tool==='erase'&&S.isUpload){ S.marquee={x0:p.x,y0:p.y,x1:p.x,y1:p.y}; return; }
-  if(S.tool==='calib'){ S.calibLine={x0:p.x,y0:p.y,x1:p.x,y1:p.y}; return; }
-  if(S.isUpload&&S.tool==='adjust'){
-    const hr=10/S.view.s;
-    for(const run of S.runs){
-      for(const key of ['top','base']) for(let i=0;i<2;i++){
-        if(dist(run[key][i],p)<hr){ S.drag={type:'pt',pt:run[key][i]}; return; }
-      }
-      for(const bal of run.bals){
-        const bp=runBalusterPos(run,bal);
-        if(Math.abs(p.x-bp.x)<hr && Math.abs(p.y-(bp.yB+8/S.view.s))<hr*1.6){
-          S.drag={type:'bal',run,bal}; return;
-        }
-      }
-    }
-  }
-  S.drag={type:'pan', sx:p.sx, sy:p.sy, tx:S.view.tx, ty:S.view.ty};
+  const r=view.getBoundingClientRect();
+  const sx=e.clientX-r.left, sy=e.clientY-r.top;
+  if(S.split && Math.abs(sx-S.split.x*(view.width/DPR))<30){ S.drag={type:'divider'}; return; }
+  S.drag={type:'pan', sx, sy, tx:S.view.tx, ty:S.view.ty};
 });
 view.addEventListener('pointermove',e=>{
   if(pointers.has(e.pointerId)) pointers.set(e.pointerId,e);
@@ -828,41 +762,19 @@ view.addEventListener('pointermove',e=>{
     S.view.ty=cy-(cy-pinch.ty)*(ns/pinch.s);
     updateZoomLbl(); invalidate(); return;
   }
-  const p=worldPt(e);
-  if(S.marquee){ S.marquee.x1=p.x; S.marquee.y1=p.y; invalidate(); return; }
-  if(S.calibLine){ S.calibLine.x1=p.x; S.calibLine.y1=p.y; invalidate(); return; }
   if(!S.drag) return;
+  const r=view.getBoundingClientRect();
+  const sx=e.clientX-r.left, sy=e.clientY-r.top;
   if(S.drag.type==='pan'){
-    S.view.tx=S.drag.tx+(p.sx-S.drag.sx); S.view.ty=S.drag.ty+(p.sy-S.drag.sy); invalidate();
-  } else if(S.drag.type==='pt'){
-    S.drag.pt.x=p.x; S.drag.pt.y=p.y; invalidate(true);
-  } else if(S.drag.type==='bal'){
-    const run=S.drag.run, x0=run.base[0].x, x1=run.base[1].x;
-    S.drag.bal.t=clamp((p.x-x0)/(x1-x0),0,1);
-    S.drag.bal.dy=p.y-8/S.view.s-lineY(run.base,lerp(x0,x1,S.drag.bal.t));
-    invalidate(true);
+    S.view.tx=S.drag.tx+(sx-S.drag.sx); S.view.ty=S.drag.ty+(sy-S.drag.sy); invalidate();
   } else if(S.drag.type==='divider'){
-    S.split.x=clamp(p.sx/(view.width/DPR),0.03,0.97); invalidate();
+    S.split.x=clamp(sx/(view.width/DPR),0.03,0.97); invalidate();
   }
 });
 function endPointer(e){
   pointers.delete(e.pointerId);
   if(pointers.size<2) pinch=null;
-  if(S.marquee){
-    const m=S.marquee; S.marquee=null;
-    inpaintRect(Math.min(m.x0,m.x1),Math.min(m.y0,m.y1),Math.abs(m.x1-m.x0),Math.abs(m.y1-m.y0));
-  }
-  if(S.calibLine){
-    const c=S.calibLine; S.calibLine=null;
-    const px=Math.hypot(c.x1-c.x0,c.y1-c.y0);
-    if(px>2){
-      S.pendingCalib={px, x:(c.x0+c.x1)/2, y:(c.y0+c.y1)/2};
-      $('calibform').classList.add('show');
-      setHint('Now enter that baluster’s real width in the panel and hit Apply.');
-    }
-    invalidate();
-  }
-  if(S.drag){ S.drag=null; saveSoon(); }
+  S.drag=null;
 }
 view.addEventListener('pointerup',endPointer);
 view.addEventListener('pointercancel',endPointer);
@@ -876,29 +788,9 @@ view.addEventListener('wheel',e=>{
   S.view.ty=cy-(cy-S.view.ty)*(ns/S.view.s);
   S.view.s=ns; updateZoomLbl(); invalidate();
 },{passive:false});
+view.addEventListener('dblclick',fitView);
 
-/* ================= UI: runs (uploads) ================= */
-function refreshRuns(){
-  const el=$('runlist'); el.innerHTML='';
-  S.runs.forEach((run,i)=>{
-    const d=document.createElement('div'); d.className='runitem';
-    d.innerHTML=`<b>Run ${i+1}</b><span style="color:var(--muted)">balusters</span>`;
-    const st=document.createElement('div'); st.className='stepper';
-    const minus=document.createElement('button'); minus.textContent='−';
-    const cnt=document.createElement('span'); cnt.textContent=run.bals.length;
-    const plus=document.createElement('button'); plus.textContent='+';
-    minus.onclick=()=>{ if(run.bals.length>2){ autoFill(run,run.bals.length-1); cnt.textContent=run.bals.length; sync(); } };
-    plus.onclick=()=>{ autoFill(run,run.bals.length+1); cnt.textContent=run.bals.length; sync(); };
-    st.append(minus,cnt,plus);
-    const del=document.createElement('button'); del.className='btn small danger'; del.textContent='remove';
-    del.onclick=()=>{ S.runs.splice(i,1); refreshRuns(); sync(); };
-    const sp=document.createElement('span'); sp.style.flex='1';
-    d.append(st,sp,del); el.appendChild(d);
-  });
-  updateCost();
-}
-
-/* ================= UI: design ================= */
+/* ================= UI ================= */
 function buildWidthChips(){
   const el=$('widths'); el.innerHTML='';
   WIDTHS.forEach(w=>{
@@ -908,120 +800,88 @@ function buildWidthChips(){
     el.appendChild(b);
   });
 }
-function buildFins(){
-  const el=$('fins'); el.innerHTML='';
-  for(const [k,f] of Object.entries(FINISHES)){
-    const b=document.createElement('button'); b.className='fin';
-    b.style.background=`linear-gradient(135deg, ${f.hi} 0%, ${f.base} 45%, ${f.edge} 100%)`;
-    b.classList.toggle('on',S.cfg.finish===k);
-    b.title=f.name;
-    b.innerHTML=`<span>${f.name}</span>`;
-    b.onclick=()=>{ S.cfg.finish=k; buildFins(); sync(); };
-    el.appendChild(b);
-  }
+function iconBaluster(x, cx, design, h){
+  drawIronV(x,{x:cx, yT:4, yB:h-4, ppi:(h-8)/34, widthIn:0.5, design, minW:2.8, forceBands:true});
 }
 function buildGallery(){
   const el=$('gallery'); el.innerHTML='';
   for(const [k,d] of Object.entries(DESIGNS)){
     const card=document.createElement('button'); card.className='dcard'; card.dataset.k=k;
-    const cv=document.createElement('canvas'); cv.width=52; cv.height=156;
-    const x=cv.getContext('2d'); x.scale(2,2);
-    drawBalusterV(x,{x:13,yT:3,yB:75,ppi:72/34,widthIn:0.5,design:k,finish:'satin-black',
-      seed:5,shoe:false,shadow:null,minW:2.6});
+    const cv=mk(60,180);
+    const x=cv.getContext('2d');
+    iconBaluster(x,30,k,180);
     const dn=document.createElement('div'); dn.className='dn'; dn.textContent=d.name;
-    const dp=document.createElement('div'); dp.className='dp';
-    dp.textContent=d.price?('#'+d.sku+' $'+d.price.toFixed(2)):('#'+d.sku);
+    const dp=document.createElement('div'); dp.className='dp'; dp.textContent='#'+d.sku+'  $'+d.price.toFixed(2);
     card.append(cv,dn,dp);
-    card.onclick=()=>{ S.cfg.pattern=[k]; refreshPattern(); sync(); };
+    card.onclick=()=>{ S.cfg.pattern=[k]; refreshPatternUI(); sync(); };
     el.appendChild(card);
   }
-  markGallery();
 }
-function markGallery(){
-  const set=new Set(S.cfg.pattern);
-  document.querySelectorAll('.dcard').forEach(c=>c.classList.toggle('on',set.has(c.dataset.k)));
-}
-function refreshPattern(){
-  const el=$('patslots'); el.innerHTML='';
-  S.cfg.pattern.forEach((p,i)=>{
-    const s=document.createElement('div'); s.className='slot';
-    const si=document.createElement('span'); si.className='si'; si.textContent=i+1;
-    const sel=document.createElement('select');
-    for(const [k,d] of Object.entries(DESIGNS)){
-      const o=document.createElement('option'); o.value=k; o.textContent=d.name;
-      if(k===p) o.selected=true; sel.appendChild(o);
+function buildPresets(){
+  const el=$('presets'); el.innerHTML='';
+  PRESETS.forEach((p,i)=>{
+    const card=document.createElement('button'); card.className='pcard'; card.dataset.i=i;
+    const cv=mk(240,116);
+    const x=cv.getContext('2d');
+    // five balusters showing the repeat
+    for(let j=0;j<5;j++){
+      iconBaluster(x, 28+j*46, p.pat[j%p.pat.length], 116);
     }
-    sel.onchange=()=>{ S.cfg.pattern[i]=sel.value; sync(); };
-    const x=document.createElement('button'); x.className='x'; x.textContent='×'; x.title='Remove from pattern';
-    x.onclick=()=>{ if(S.cfg.pattern.length>1){ S.cfg.pattern.splice(i,1); refreshPattern(); sync(); } };
-    s.append(si,sel,x); el.appendChild(s);
+    const pn=document.createElement('div'); pn.className='pn'; pn.textContent=p.name;
+    card.append(cv,pn);
+    card.onclick=()=>{ S.cfg.pattern=[...p.pat]; refreshPatternUI(); sync(); };
+    el.appendChild(card);
   });
-  if(S.cfg.pattern.length<3){
-    const add=document.createElement('button'); add.className='btn small'; add.textContent='＋';
-    add.title='Add a slot (up to 3 designs per repeat)';
-    add.onclick=()=>{ S.cfg.pattern.push(S.cfg.pattern[S.cfg.pattern.length-1]||'plain'); refreshPattern(); sync(); };
-    el.appendChild(add);
+}
+function refreshPatternUI(){
+  // presets highlight
+  document.querySelectorAll('.pcard').forEach(c=>{
+    const p=PRESETS[+c.dataset.i];
+    c.classList.toggle('on', p.pat.join()===S.cfg.pattern.join());
+  });
+  document.querySelectorAll('.dcard').forEach(c=>{
+    c.classList.toggle('on', S.cfg.pattern.length===1 && S.cfg.pattern[0]===c.dataset.k);
+  });
+  // slots
+  for(let i=0;i<3;i++){
+    const sel=$('slot'+i); sel.innerHTML='';
+    const none=document.createElement('option'); none.value=''; none.textContent=(i+1)+': —';
+    sel.appendChild(none);
+    for(const [k,d] of Object.entries(DESIGNS)){
+      const o=document.createElement('option'); o.value=k; o.textContent=(i+1)+': '+d.name;
+      sel.appendChild(o);
+    }
+    sel.value=S.cfg.pattern[i]||'';
   }
 }
-function drawElevation(){
-  const cv=$('elev'); const cssW=cv.clientWidth||300, cssH=170;
-  cv.width=cssW*2; cv.height=cssH*2;
-  const x=cv.getContext('2d'); x.scale(2,2);
-  let g=x.createLinearGradient(0,0,0,cssH);
-  g.addColorStop(0,'#efe9de'); g.addColorStop(1,'#ded3c2');
-  x.fillStyle=g; x.fillRect(0,0,cssW,cssH);
-  g=x.createLinearGradient(0,10,0,26);
-  g.addColorStop(0,'#9a7040'); g.addColorStop(0.4,'#7c5730'); g.addColorStop(1,'#4e3419');
-  x.fillStyle=g; x.fillRect(0,10,cssW,16);
-  x.fillStyle='rgba(255,235,200,.3)'; x.fillRect(0,12,cssW,2.5);
-  x.fillStyle='#f4f1ea'; x.fillRect(0,cssH-24,cssW,10);
-  x.fillStyle='#b28a5c'; x.fillRect(0,cssH-14,cssW,14);
-  const yT=26, yB=cssH-24, ppi=(yB-yT)/34;
-  const n=7, gap=cssW/(n+1);
-  for(let i=0;i<n;i++){
-    drawBalusterV(x,{x:gap*(i+1), yT, yB, ppi, widthIn:S.cfg.widthIn,
-      design:S.cfg.pattern[i%S.cfg.pattern.length], finish:S.cfg.finish,
-      seed:31+i*7, shoe:S.cfg.shoes, minW:2, shadow:{dir:1,alpha:0.1}});
-  }
+function slotsChanged(){
+  const pat=[];
+  for(let i=0;i<3;i++){ const v=$('slot'+i).value; if(v) pat.push(v); }
+  if(!pat.length) pat.push('plain');
+  S.cfg.pattern=pat;
+  refreshPatternUI(); sync();
 }
 function updateCost(){
-  let total=0, count=0, unpriced=0, inner=0;
-  const tally=(n)=>{
-    for(let i=0;i<n;i++){
-      count++;
-      const d=DESIGNS[S.cfg.pattern[i%S.cfg.pattern.length]];
-      if(d&&d.price) total+=d.price; else unpriced++;
-    }
-  };
-  if(S.balusters){
-    tally(S.balusters.filter(b=>!b.inner).length);
-    inner=S.balusters.filter(b=>b.inner).length;
-  } else {
-    tally(S.runs.reduce((s,r)=>s+r.bals.length,0));
-  }
-  const el=$('cost');
-  if(!count){ el.textContent=''; return; }
-  let t=`${count} balusters · est. $${total.toFixed(0)}`;
-  if(unpriced) t+=` (+${unpriced} unpriced)`;
-  if(inner) t+=` · +${inner} hallway side`;
-  t+=' — 1/2″ satin black sale prices';
-  el.textContent=t;
+  let total=0;
+  for(let i=0;i<PROJECT_COUNT;i++) total+=DESIGNS[S.cfg.pattern[i%S.cfg.pattern.length]].price;
+  const seq=S.cfg.pattern.map(k=>DESIGNS[k].name).join(' · ');
+  $('cost').textContent=`Repeat: ${seq}\nAcross ~${PROJECT_COUNT} balusters: est. $${total.toFixed(0)} in parts`;
+  $('cost').style.whiteSpace='pre-line';
 }
 
 /* ================= looks & compare ================= */
 function lookName(cfg){
   const wl=WIDTHS.find(w=>Math.abs(w.v-cfg.widthIn)<1e-4);
-  const ds=[...new Set(cfg.pattern)].map(k=>DESIGNS[k]?DESIGNS[k].name:k).join(' + ');
-  return `${wl?wl.label:''} ${ds} · ${FINISHES[cfg.finish].name}`;
+  return `${wl?wl.label:''} ${cfg.pattern.map(k=>DESIGNS[k].name).join(' · ')}`;
 }
 function refreshLooks(){
   const el=$('looklist'); el.innerHTML='';
   S.looks.forEach((lk,i)=>{
     const d=document.createElement('div'); d.className='lookitem';
     const tag=document.createElement('span'); tag.className='tag'; tag.textContent=String.fromCharCode(65+i);
-    const nm=document.createElement('span'); nm.className='ln'; nm.textContent=lk.name; nm.title='Apply this look';
+    const nm=document.createElement('span'); nm.className='ln'; nm.textContent=lk.name;
     nm.onclick=()=>{ S.cfg={...S.cfg, ...JSON.parse(JSON.stringify(lk.cfg))}; S.split=null; syncAll(); };
-    const del=document.createElement('button'); del.className='x btn small'; del.textContent='×';
+    const del=document.createElement('button'); del.className='x'; del.textContent='×';
     del.onclick=()=>{ S.looks.splice(i,1); S.split=null; refreshLooks(); invalidate(); saveSoon(); };
     d.append(tag,nm,del); el.appendChild(d);
   });
@@ -1030,23 +890,22 @@ function refreshLooks(){
   for(const id of ['cmpA','cmpB']){
     const sel=$(id); const cur=sel.value; sel.innerHTML='';
     S.looks.forEach((lk,i)=>{ const o=document.createElement('option'); o.value=i;
-      o.textContent=String.fromCharCode(65+i)+' — '+lk.name.slice(0,26); sel.appendChild(o); });
+      o.textContent=String.fromCharCode(65+i)+' — '+lk.name.slice(0,24); sel.appendChild(o); });
     if(cur) sel.value=cur;
   }
   if(S.looks.length>=2 && $('cmpB').value===$('cmpA').value) $('cmpB').value='1';
 }
 function saveLook(){
-  S.looks.push({name:lookName(S.cfg), cfg:JSON.parse(JSON.stringify({
-    widthIn:S.cfg.widthIn, finish:S.cfg.finish, pattern:S.cfg.pattern, shoes:S.cfg.shoes}))});
+  S.looks.push({name:lookName(S.cfg), cfg:{widthIn:S.cfg.widthIn, pattern:[...S.cfg.pattern]}});
   if(S.looks.length>8) S.looks.shift();
   refreshLooks(); saveSoon();
-  setHint(`Saved as look ${String.fromCharCode(64+S.looks.length)}. Save another, then hit Compare.`);
+  setHint(`Saved as look ${String.fromCharCode(64+S.looks.length)}.`);
 }
 function toggleCompare(){
   if(S.split&&S.split.mode==='looks'){ S.split=null; $('cmpBtn').textContent='Compare'; }
   else{
     const a=+$('cmpA').value, b=+$('cmpB').value;
-    if(a===b){ setHint('Pick two different looks to compare.'); return; }
+    if(a===b){ setHint('Pick two different looks.'); return; }
     S.split={mode:'looks',a,b,x:0.5}; $('cmpBtn').textContent='Exit compare';
     setHint('Drag the white divider to swipe between the two looks.');
   }
@@ -1055,7 +914,7 @@ function toggleCompare(){
 function toggleBefore(){
   if(S.split&&S.split.mode==='before'){ S.split=null; $('beforeBtn').classList.remove('on'); }
   else{
-    if(!S.before){ setHint('Before/after works on the three built-in scenes.'); return; }
+    if(!S.before){ setHint('No before image for this scene.'); return; }
     S.split={mode:'before',x:0.5}; $('beforeBtn').classList.add('on');
     setHint('Drag the white divider: left is today’s white wood, right is the iron.');
   }
@@ -1065,84 +924,51 @@ function toggleBefore(){
 /* ================= export / persist ================= */
 function exportPNG(){
   if(!S.plate) return;
-  const c=document.createElement('canvas'); c.width=S.plate.width; c.height=S.plate.height;
-  const x=c.getContext('2d');
-  drawScene(x,S.cfg);
+  const c=mk(S.plate.width,S.plate.height);
+  drawScene(c.getContext('2d'),S.cfg);
   const a=document.createElement('a');
   a.download='staircase-iron-preview.png';
   a.href=c.toDataURL('image/png');
   a.click();
 }
 let saveTimer=null;
-function saveSoon(){ clearTimeout(saveTimer); saveTimer=setTimeout(persist,900); }
-function persist(){
-  try{
-    localStorage.setItem('baluster-studio-v2', JSON.stringify({v:2, cfg:S.cfg, looks:S.looks, sceneId:S.sceneId}));
-  }catch(e){}
-}
+function saveSoon(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ try{
+  localStorage.setItem('baluster-studio-v3', JSON.stringify({cfg:S.cfg, looks:S.looks, sceneId:S.sceneId}));
+}catch(e){} },700); }
 function restore(){
   try{
-    const raw=localStorage.getItem('baluster-studio-v2');
-    if(!raw) return null;
-    const d=JSON.parse(raw);
-    if(d.cfg) S.cfg={...S.cfg,...d.cfg};
-    if(Array.isArray(d.looks)) S.looks=d.looks;
+    const d=JSON.parse(localStorage.getItem('baluster-studio-v3')||'null');
+    if(!d) return null;
+    if(d.cfg&&d.cfg.pattern&&d.cfg.pattern.every(k=>DESIGNS[k])) S.cfg={...S.cfg,...d.cfg};
+    if(Array.isArray(d.looks)) S.looks=d.looks.filter(l=>l.cfg&&l.cfg.pattern&&l.cfg.pattern.every(k=>DESIGNS[k]));
     return d.sceneId||null;
   }catch(e){ return null; }
 }
 
-/* ================= sync ================= */
-function sync(){ markGallery(); drawElevation(); updateCost(); invalidate(true); saveSoon(); }
-function syncAll(){ buildWidthChips(); buildFins(); refreshPattern(); refreshLooks(); sync(); }
-
-/* ================= wire up ================= */
-document.querySelectorAll('#toolbar [data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+/* ================= sync & boot ================= */
+function sync(){ updateCost(); invalidate(true); saveSoon(); }
+function syncAll(){ buildWidthChips(); refreshPatternUI(); refreshLooks(); sync(); }
 $('fitBtn').onclick=fitView;
-$('uploadBtn').onclick=()=>$('fileInput').click();
-$('fileInput').onchange=e=>{ if(e.target.files[0]) loadPhotoFile(e.target.files[0]); e.target.value=''; };
-$('markBtn').onclick=()=>setTool('run');
-$('railH').onchange=()=>{ S.cfg.railH=clamp(parseFloat($('railH').value)||35,28,44); sync(); };
-$('calibBtn').onclick=()=>setTool('calib');
-$('calibApply').onclick=()=>{
-  if(!S.pendingCalib) return;
-  const inches=clamp(parseFloat($('calibIn').value)||1.75,0.4,5);
-  let hRef=0,best=1e9;
-  eachRunBaluster((run,bal)=>{ const p=runBalusterPos(run,bal);
-    const dd=Math.abs(p.x-S.pendingCalib.x)+Math.abs(p.yB-S.pendingCalib.y)*0.3;
-    if(dd<best){best=dd;hRef=p.h;} });
-  if(hRef<4){ setHint('Mark a run first — scale needs a baluster height to reference.'); return; }
-  S.calib={ppi:S.pendingCalib.px/inches, hRef};
-  S.pendingCalib=null; $('calibform').classList.remove('show');
-  setTool('adjust'); setHint('True scale set — widths now render to real size.');
-  sync();
-};
-$('autoEraseBtn').onclick=autoErase;
-$('undoBtn').onclick=undoErase;
-$('shoesChk').onchange=e=>{ S.cfg.shoes=e.target.checked; sync(); };
-$('presetSel').onchange=e=>{
-  if(!e.target.value) return;
-  S.cfg.pattern=e.target.value.split(',');
-  e.target.value=''; refreshPattern(); sync();
-};
-$('saveLookBtn').onclick=saveLook;
-$('cmpBtn').onclick=toggleCompare;
 $('beforeBtn').onclick=toggleBefore;
 $('exportBtn').onclick=exportPNG;
+$('saveLookBtn').onclick=saveLook;
+$('cmpBtn').onclick=toggleCompare;
+for(let i=0;i<3;i++) $('slot'+i).onchange=slotsChanged;
 $('resetBtn').onclick=()=>{
-  if(!confirm('Start over? This clears your looks and settings.')) return;
-  localStorage.removeItem('baluster-studio-v2');
-  S.cfg={widthIn:0.5, finish:'satin-black', pattern:['plain','twist','plain'], shoes:true, railH:35};
-  S.looks=[]; S.split=null; S.calib=null; S.undoStack.length=0;
-  syncAll(); setScene('foyer');
+  if(!confirm('Reset looks and settings?')) return;
+  localStorage.removeItem('baluster-studio-v3');
+  S.cfg={widthIn:0.5, pattern:['plain','twist','plain']};
+  S.looks=[]; S.split=null;
+  syncAll(); setScene('closeup');
 };
-window.addEventListener('resize',()=>{ resizeCanvas(); fitView(); drawElevation(); });
+window.addEventListener('resize',()=>{ resizeCanvas(); fitView(); });
 
-/* ================= boot ================= */
 resizeCanvas();
 buildScenes();
 buildGallery();
-const savedScene = restore();
+buildPresets();
+const savedScene=restore();
 syncAll();
-setScene(savedScene||'foyer');
+setScene(savedScene==='landing'?'landing':'closeup');
 render();
 </script>

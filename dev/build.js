@@ -5,7 +5,7 @@ const ROOT = path.join(__dirname, '..');
 
 const app = fs.readFileSync(path.join(ROOT, 'baluster-studio.html'), 'utf8');
 const scenes = {};
-for (const id of ['foyer', 'flight', 'landing']) {
+for (const id of ['landing']) {
   scenes[id] = {
     plate: 'data:image/jpeg;base64,' + fs.readFileSync(path.join(ROOT, 'scenes', id + '.jpg')).toString('base64'),
     before: 'data:image/jpeg;base64,' + fs.readFileSync(path.join(ROOT, 'scenes', id + '_before.jpg')).toString('base64'),
