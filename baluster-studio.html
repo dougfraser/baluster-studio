@@ -65,6 +65,7 @@
     display:flex;flex-direction:column;align-items:center;gap:2px}
   .dcard:hover{border-color:var(--accent)}
   .dcard.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .dcard canvas, .pcard canvas{background:linear-gradient(#efe8db,#ded3c2);border-radius:4px}
   .dcard canvas{width:30px;height:90px}
   .dcard .dn{font-size:10px;line-height:1.15;text-align:center;font-weight:600}
   .dcard .dp{font:9px var(--mono);color:var(--muted)}
@@ -789,9 +790,6 @@ async function setScene(id){
   }
   S.split=null; $('beforeBtn').classList.remove('on');
   markScenes(); fitView(); updateCost(); invalidate(true); saveSoon();
-  setHint(id==='closeup' ? 'A drawn close-up of your staircase — designs read clearly here. Zoom in!'
-        : id==='level'   ? 'A drawn level run, like your landing. Great for seeing the pattern rhythm.'
-                         : 'Your upstairs landing, real photo. Swipe Before/after to compare with today.');
 }
 function markScenes(){
   document.querySelectorAll('#scenes .chip').forEach(c=>c.classList.toggle('on', c.dataset.id===S.sceneId));
@@ -886,7 +884,12 @@ function fitView(){
   updateZoomLbl(); invalidate();
 }
 function updateZoomLbl(){ $('zoomlbl').textContent=Math.round(S.view.s*100)+'%'; }
-function setHint(t){ $('hint').textContent=t; $('hint').style.display=t?'block':'none'; }
+let hintTimer=null;
+function setHint(t){
+  $('hint').textContent=t; $('hint').style.display=t?'block':'none';
+  clearTimeout(hintTimer);
+  if(t) hintTimer=setTimeout(()=>{ $('hint').style.display='none'; }, 3500);
+}
 let pointers=new Map(), pinch=null;
 view.addEventListener('pointerdown',e=>{
   view.setPointerCapture(e.pointerId);
